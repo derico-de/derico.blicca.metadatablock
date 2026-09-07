@@ -66,7 +66,7 @@ author_email = "md@derico.de"
 [tool.plone.backend_addon.settings.subtemplates]
 content_types = []
 behaviors = []
-services = []
+services = ["@metadata-catalog"]
 views = ["aurora-block-metadata", "aurora-block-metadataSection"]
 
 [tool.pytest.ini_options]
