@@ -12,4 +12,13 @@
       layer="derico.blicca.metadatablock.interfaces.IDericoBliccaMetadatablockLayer"
       />
 
+  <browser:page
+      name="aurora-block-metadataSection"
+      for="*"
+      class=".metadata_section_block_view.MetadataSectionBlockView"
+      template="metadata_section_block_view.pt"
+      permission="zope2.View"
+      layer="derico.blicca.metadatablock.interfaces.IDericoBliccaMetadatablockLayer"
+      />
+
 </configure>
