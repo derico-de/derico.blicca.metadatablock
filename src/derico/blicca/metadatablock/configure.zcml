@@ -92,4 +92,7 @@
 
   <include package=".api" />
 
+
+  <include package=".upgrades" />
+
 </configure>
