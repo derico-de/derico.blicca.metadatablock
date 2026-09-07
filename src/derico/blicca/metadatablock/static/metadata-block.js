@@ -1,8 +1,8 @@
 import { jsxs, jsx, Fragment } from "react/jsx-runtime";
-import { useState, useEffect, useId } from "react";
+import { useState, useEffect, useRef, useLayoutEffect, createElement, useId } from "react";
 import config from "@plone/registry";
 import { atom, useAtomValue } from "jotai";
-import { getStyleFieldDefinitionsFromRegistry } from "@plone/helpers";
+import { useFieldFocusedAtom, getStyleFieldDefinitionsFromRegistry } from "@plone/helpers";
 const base = {
   viewBox: "0 0 24 24",
   fill: "none",
@@ -30,6 +30,7 @@ function MetadataSectionIcon(props) {
   ] });
 }
 const KINDS = ["text", "richtext", "list", "links", "image", "file"];
+const INPUTS = ["line", "text"];
 const LAYOUTS = [
   ["list", "List"],
   ["table", "Table"]
@@ -62,7 +63,14 @@ function catalog(data) {
     const id = fieldSlug(raw.id);
     const kind = text(raw.kind);
     if (!id || !KINDS.includes(kind)) continue;
-    rows.push({ id, title: text(raw.title), kind, value: raw.value });
+    const control = text(raw.input);
+    rows.push({
+      id,
+      title: text(raw.title),
+      kind,
+      value: raw.value,
+      input: INPUTS.includes(control) ? control : ""
+    });
   }
   return rows;
 }
@@ -102,7 +110,8 @@ function entry(row, showLabel2) {
     kind: row.kind,
     value: resolveValue(row.kind, row.value),
     label: showLabel2 && row.title ? row.title : "",
-    css: `metadata-block has--field--${row.id} has--kind--${row.kind}`
+    css: `metadata-block has--field--${row.id} has--kind--${row.kind}`,
+    input: row.input
   };
 }
 function storedField(data) {
@@ -129,6 +138,7 @@ function metadataEntry(data) {
     value: null,
     label: "",
     css: slug ? `metadata-block has--field--${slug}` : "metadata-block",
+    input: "",
     placeholder: fieldId ? placeholder(data) : ""
   };
 }
@@ -150,19 +160,20 @@ function fieldSpecs(data) {
   }
   return specs;
 }
-function sectionEntries(data) {
+function sectionEntries(data, keepEmpty) {
   const found = [];
   for (const spec of fieldSpecs(data)) {
     const row = rowFor(data, spec.field);
     if (!row) continue;
     const candidate = entry(row, spec.showLabel);
-    if (candidate.value !== null) found.push(candidate);
+    if (candidate.value !== null || keepEmpty?.(candidate)) found.push(candidate);
   }
   return found;
 }
-function MetadataValue({ entry: entry2, tag, isEditMode }) {
-  if (entry2.value === null || !entry2.kind) return null;
+function MetadataValue({ entry: entry2, tag, isEditMode, input }) {
   const Tag = tag;
+  if (input) return /* @__PURE__ */ jsx(Tag, { className: "metadata-value metadata-value--text", children: input });
+  if (entry2.value === null || !entry2.kind) return null;
   const className = `metadata-value metadata-value--${entry2.kind}`;
   const href = (target) => isEditMode ? {} : { href: target };
   switch (entry2.kind) {
@@ -186,12 +197,13 @@ function MetadataValue({ entry: entry2, tag, isEditMode }) {
       return null;
   }
 }
-function MetadataView({ data = {}, isEditMode }) {
+function MetadataView({ data = {}, isEditMode, renderInput: renderInput2 }) {
   const entry2 = metadataEntry(data);
+  const input = renderInput2?.(entry2, entry2.placeholder) ?? null;
   return /* @__PURE__ */ jsxs("div", { className: entry2.css, children: [
     entry2.label ? /* @__PURE__ */ jsx("span", { className: "metadata-label", children: entry2.label }) : null,
-    /* @__PURE__ */ jsx(MetadataValue, { entry: entry2, tag: "div", isEditMode }),
-    entry2.placeholder ? /* @__PURE__ */ jsx("div", { className: "metadata-value metadata-value--placeholder", children: entry2.placeholder }) : null
+    /* @__PURE__ */ jsx(MetadataValue, { entry: entry2, tag: "div", isEditMode, input }),
+    entry2.placeholder && !input ? /* @__PURE__ */ jsx("div", { className: "metadata-value metadata-value--placeholder", children: entry2.placeholder }) : null
   ] });
 }
 const EDIT_SUFFIX = /\/(?:@@aurora-edit|edit)\/?$/;
@@ -258,22 +270,68 @@ function formAtom() {
     return fallbackFormAtom;
   }
 }
-function useLiveTitle() {
+function isBound(row) {
+  return row.kind === "text" && (!!row.input || row.id === "title");
+}
+function useLiveRows(rows) {
   const content = useAtomValue(formAtom());
-  const title = content && typeof content === "object" ? content.title : null;
-  return typeof title === "string" ? title : null;
+  if (!rows) return null;
+  return rows.map((row) => {
+    if (!isBound(row)) return row;
+    const live = content && typeof content === "object" ? content[row.id] : void 0;
+    return typeof live === "string" ? { ...row, value: live } : row;
+  });
+}
+function useFieldBinding(fieldId) {
+  const [value, setValue] = useFieldFocusedAtom(formAtom(), fieldId);
+  return [typeof value === "string" ? value : null, setValue];
+}
+const stop = (event) => event.stopPropagation();
+function FieldInput({ entry: entry2, placeholder: placeholder2 }) {
+  const [bound, setValue] = useFieldBinding(entry2.id);
+  const value = bound ?? (typeof entry2.value === "string" ? entry2.value : "");
+  const ref = useRef(null);
+  const line = entry2.input === "line";
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    element.style.height = "auto";
+    element.style.height = `${element.scrollHeight}px`;
+  }, [value]);
+  return /* @__PURE__ */ jsx(
+    "textarea",
+    {
+      ref,
+      className: "metadata-input",
+      rows: 1,
+      value,
+      placeholder: placeholder2 || entry2.title,
+      "aria-label": entry2.title,
+      onChange: (event) => {
+        const next = event.target.value;
+        setValue(line ? next.replace(/[\r\n]+/g, " ") : next);
+      },
+      onKeyDown: (event) => {
+        event.stopPropagation();
+        if (line && event.key === "Enter") event.preventDefault();
+      },
+      onKeyUp: stop,
+      onBeforeInput: stop,
+      onPaste: stop,
+      onCopy: stop,
+      onCut: stop,
+      onDrop: stop
+    }
+  );
 }
 function usePreviewCatalog(data) {
   const { catalog: catalog2, state } = useCatalog(data);
-  const liveTitle = useLiveTitle();
-  let rows = catalog2;
-  if (rows && liveTitle !== null) {
-    rows = rows.map(
-      (row) => row.id === "title" && row.kind === "text" ? { ...row, value: text(liveTitle) } : row
-    );
-  }
+  const rows = useLiveRows(catalog2);
   const preview = rows ? { ...data, catalog: rows } : data;
   return { preview, state, rows };
+}
+function renderInput(entry2, placeholder2 = "") {
+  return entry2.input ? createElement(FieldInput, { entry: entry2, placeholder: placeholder2 }) : null;
 }
 function catalogNotices(state) {
   if (state === "loading") return ["Loading this page’s fields…"];
@@ -283,6 +341,7 @@ function catalogNotices(state) {
   return [];
 }
 const EDIT_HINT = "Previewed as you: the values come from this page. Edit them on the Content tab.";
+const INLINE_HINT = "Previewed as you: text fields are typed here and saved with the page; every other field is edited on the Content tab.";
 function MetadataEdit(props) {
   const data = props.data ?? {};
   const { preview, state, rows } = usePreviewCatalog(data);
@@ -294,28 +353,33 @@ function MetadataEdit(props) {
       notes.push("Choose a field in the sidebar.");
     } else if (!entry2.kind) {
       notes.push(`This page has no field “${field}”, so the block renders empty.`);
+    } else if (entry2.input) {
+      notes.push(
+        entry2.value === null ? `“${entry2.title}” is empty here — type to fill it. Until then the page ${entry2.placeholder ? "shows the placeholder" : "renders the block empty"}.` : `“${entry2.title}” is typed here and saved with the page.`
+      );
     } else if (entry2.value === null) {
       notes.push(
         entry2.placeholder ? `“${entry2.title}” is empty here, so the placeholder shows.` : `“${entry2.title}” is empty here, so the block renders empty.`
       );
     } else if (rows) {
-      notes.push(EDIT_HINT);
+      notes.push(rows.some((row) => row.input) ? INLINE_HINT : EDIT_HINT);
     }
   }
   return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(MetadataView, { data: preview, isEditMode: true }),
+    /* @__PURE__ */ jsx(MetadataView, { data: preview, isEditMode: true, renderInput }),
     notes.map((note) => /* @__PURE__ */ jsx("p", { className: "metadata-notice", contentEditable: false, children: note }, note))
   ] });
 }
-function MetadataSectionView({ data = {}, isEditMode }) {
+function MetadataSectionView({ data = {}, isEditMode, renderInput: renderInput2 }) {
   const title = sectionTitle(data);
   const layout = effectiveLayout(data);
-  const entries = sectionEntries(data);
+  const entries = sectionEntries(data, renderInput2 ? (candidate) => !!candidate.input : void 0);
+  const input = (entry2) => renderInput2?.(entry2, "") ?? null;
   return /* @__PURE__ */ jsxs("section", { className: `metadata-section-block has--layout--${layout}`, "aria-label": title || void 0, children: [
     title ? /* @__PURE__ */ jsx("h2", { className: "metadata-section-title", children: title }) : null,
     entries.length && layout === "list" ? /* @__PURE__ */ jsx("div", { className: "metadata-section-list", children: entries.map((entry2, index) => /* @__PURE__ */ jsxs("div", { className: entry2.css, children: [
       entry2.label ? /* @__PURE__ */ jsx("span", { className: "metadata-label", children: entry2.label }) : null,
-      /* @__PURE__ */ jsx(MetadataValue, { entry: entry2, tag: "div", isEditMode })
+      /* @__PURE__ */ jsx(MetadataValue, { entry: entry2, tag: "div", isEditMode, input: input(entry2) })
     ] }, `${entry2.id}:${index}`)) }) : null,
     entries.length && layout === "table" ? /* @__PURE__ */ jsx("table", { className: "metadata-section-table", children: /* @__PURE__ */ jsx("tbody", { children: entries.map((entry2, index) => /* @__PURE__ */ jsxs(
       "tr",
@@ -323,7 +387,7 @@ function MetadataSectionView({ data = {}, isEditMode }) {
         className: `metadata-section-row has--field--${entry2.id} has--kind--${entry2.kind}`,
         children: [
           /* @__PURE__ */ jsx("th", { className: "metadata-label", scope: "row", children: entry2.title }),
-          /* @__PURE__ */ jsx(MetadataValue, { entry: entry2, tag: "td", isEditMode })
+          /* @__PURE__ */ jsx(MetadataValue, { entry: entry2, tag: "td", isEditMode, input: input(entry2) })
         ]
       },
       `${entry2.id}:${index}`
@@ -334,24 +398,23 @@ function MetadataSectionEdit(props) {
   const data = props.data ?? {};
   const { preview, state, rows } = usePreviewCatalog(data);
   const specs = fieldSpecs(data);
-  const shown = sectionEntries(preview).length;
+  const published = sectionEntries(preview);
+  const typed = sectionEntries(preview, (candidate) => !!candidate.input).filter((e) => e.input);
   const notes = catalogNotices(state);
   if (!notes.length) {
     if (!specs.length) {
       notes.push("No fields selected. Add fields in the sidebar.");
     } else if (rows) {
-      const skipped = specs.map((spec) => rowFor(preview, spec.field)?.title || spec.field).filter((_title, index) => {
-        const row = rowFor(preview, specs[index].field);
-        return !row || sectionEntries({ ...preview, fields: [specs[index]] }).length === 0;
-      });
+      const skipped = specs.filter((spec) => sectionEntries({ ...preview, fields: [spec] }).length === 0).map((spec) => rowFor(preview, spec.field)?.title || spec.field);
       if (skipped.length) {
-        notes.push(`Empty here, so not shown: ${skipped.join(", ")}.`);
+        notes.push(`Empty here, so not shown on the page: ${skipped.join(", ")}.`);
       }
-      if (shown) notes.push(EDIT_HINT);
+      if (typed.length) notes.push(INLINE_HINT);
+      else if (published.length) notes.push(EDIT_HINT);
     }
   }
   return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(MetadataSectionView, { data: preview, isEditMode: true }),
+    /* @__PURE__ */ jsx(MetadataSectionView, { data: preview, isEditMode: true, renderInput }),
     notes.map((note) => /* @__PURE__ */ jsx("p", { className: "metadata-notice", contentEditable: false, children: note }, note))
   ] });
 }

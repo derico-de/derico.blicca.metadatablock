@@ -100,7 +100,13 @@ class TestShape(CatalogTestCase):
 class TestKinds(CatalogTestCase):
     def test_text(self):
         rows = by_id(self.catalog())
-        assert rows["title"] == {"id": "title", "title": "Title", "kind": "text", "value": "A doc"}
+        assert rows["title"] == {
+            "id": "title",
+            "title": "Title",
+            "kind": "text",
+            "value": "A doc",
+            "input": "line",
+        }
         assert rows["description"]["value"] == "A short summary.\nSecond line."
 
     def test_richtext_is_the_output_html(self):
@@ -174,6 +180,64 @@ class TestKinds(CatalogTestCase):
         row = by_id(self.catalog())["relatedItems"]
         assert row["kind"] == "links"
         assert row["value"] == [{"href": other.absolute_url(), "title": "Other"}]
+
+
+class TestInputs(CatalogTestCase):
+    """Which rows the canvas may edit inline, decided here (ADR 0002)."""
+
+    def test_a_text_line_is_a_line_and_text_is_text(self):
+        rows = by_id(self.catalog())
+        assert rows["title"]["input"] == "line"
+        assert rows["description"]["input"] == "text"
+
+    def test_every_other_kind_and_shape_is_shown_only(self):
+        rows = by_id(self.catalog())
+        # rich text, a list, a date, a boolean, a choice: formatted, not typed
+        for name in ("text", "subjects", "effective", "exclude_from_nav", "language"):
+            assert rows[name]["input"] == "", name
+
+    def test_system_rows_are_never_edited(self):
+        rows = by_id(self.catalog())
+        for name in ("created", "modified", "review_state"):
+            assert rows[name]["input"] == "", name
+
+    def test_the_site_root_title_is_a_line(self):
+        assert by_id(self.catalog(self.portal))["title"]["input"] == "line"
+
+    def test_needs_modify_portal_content(self):
+        # A Reader sees the title but the content PATCH would refuse them.
+        api.user.create(email="r@example.org", username="reader", password="secret123")
+        api.user.grant_roles(username="reader", obj=self.doc, roles=["Reader"])
+        logout()
+        login(self.portal, "reader")
+        rows = by_id(self.catalog())
+        assert rows["title"]["value"] == "A doc"
+        assert rows["title"]["input"] == ""
+        assert rows["description"]["input"] == ""
+
+    def test_needs_the_fields_own_write_permission(self):
+        # An Editor may modify the document but the ownership behavior guards
+        # `creators` with `Manage portal`... a list, so take a schema whose
+        # write permission is tagged on a text field instead: the test
+        # tags one on the fly.
+        from plone.autoform.interfaces import WRITE_PERMISSIONS_KEY
+        from plone.dexterity.utils import iterSchemata
+
+        schema = next(s for s in iterSchemata(self.doc) if "description" in s)
+        tagged = dict(schema.queryTaggedValue(WRITE_PERMISSIONS_KEY) or {})
+        schema.setTaggedValue(
+            WRITE_PERMISSIONS_KEY, {**tagged, "description": "cmf.ManagePortal"}
+        )
+        try:
+            api.user.create(email="e@example.org", username="editor", password="secret123")
+            api.user.grant_roles(username="editor", obj=self.doc, roles=["Editor"])
+            logout()
+            login(self.portal, "editor")
+            rows = by_id(self.catalog())
+            assert rows["title"]["input"] == "line"
+            assert rows["description"]["input"] == ""
+        finally:
+            schema.setTaggedValue(WRITE_PERMISSIONS_KEY, tagged)
 
 
 class TestWhoseCatalog(CatalogTestCase):

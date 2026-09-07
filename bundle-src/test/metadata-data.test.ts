@@ -6,14 +6,15 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  catalog,
   DEFAULT_LAYOUT,
   DERIVED_KEYS,
-  KINDS,
-  LAYOUT_IDS,
-  catalog,
   effectiveLayout,
   fieldSlug,
   fieldSpecs,
+  INPUTS,
+  KINDS,
+  LAYOUT_IDS,
   metadataEntry,
   resolveValue,
   rowFor,
@@ -26,6 +27,7 @@ describe('the tables', () => {
   it('know six kinds and two layouts', () => {
     expect(KINDS).toEqual(['text', 'richtext', 'list', 'links', 'image', 'file']);
     expect(LAYOUT_IDS).toEqual(['list', 'table']);
+    expect(INPUTS).toEqual(['line', 'text']);
     expect(LAYOUT_IDS).toContain(DEFAULT_LAYOUT);
   });
 
@@ -79,9 +81,21 @@ describe('catalog', () => {
       ],
     });
     expect(rows).toEqual([
-      { id: 'title', title: 'Title', kind: 'text', value: 'A' },
-      { id: 'ok', title: '', kind: 'list', value: undefined },
+      { id: 'title', title: 'Title', kind: 'text', value: 'A', input: '' },
+      { id: 'ok', title: '', kind: 'list', value: undefined, input: '' },
     ]);
+  });
+
+  it('keeps an input it knows and drops one it does not', () => {
+    const rows = catalog({
+      catalog: [
+        { id: 'title', kind: 'text', input: 'line' },
+        { id: 'description', kind: 'text', input: 'text' },
+        { id: 'text', kind: 'richtext', input: 'plate' },
+        { id: 'effective', kind: 'text', input: null },
+      ],
+    })!;
+    expect(rows.map((row) => row.input)).toEqual(['line', 'text', '', '']);
   });
 
   it('finds a row by trimmed id', () => {

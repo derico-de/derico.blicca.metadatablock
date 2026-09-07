@@ -1,5 +1,10 @@
 # The catalog is the server's, and the blocks show fields rather than edit them
 
+> **Partly superseded by ADR 0002 (2026-09-07):** the "Editing" section no
+> longer holds for plain text fields — a `TextLine` or `Text` the user may
+> write is typed in the canvas through the host's form atom, and the Blicca
+> save carries it. The catalog design below stands unchanged.
+
 `@eeacms/volto-metadata-block`, which this package follows, does two things
 its host lets it do: it *edits* the chosen field inline (Volto passes every
 block `properties` and `onChangeField`, and its form persists any field) and

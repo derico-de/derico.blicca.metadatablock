@@ -13,8 +13,8 @@ a request, lives in ``metadata_catalog``.
 
 What the two sides read is the same thing: the ``catalog`` key the server's
 serializer injects at load time — every field of the content item the block
-sits on, as ``{id, title, kind, value}`` rows with the value already reduced to
-one of six display kinds. Neither renderer formats a field value itself; the
+sits on, as ``{id, title, kind, value, input}`` rows with the value already
+reduced to one of six display kinds. Neither renderer formats a field value itself; the
 catalog is the server's alone (block add-on contract §5.3), and the canvas
 only ever *fetches* one when it holds a node the server has never serialized.
 """
@@ -35,6 +35,13 @@ import re
 #: - ``file``: ``{href, title}``.
 #: PARITY: ``data.ts`` spells the same tuple. Extended together or not at all.
 KINDS = ("text", "richtext", "list", "links", "image", "file")
+
+#: The inline controls the canvas can offer for a ``text``-kind row, named by
+#: the server per field (ADR 0002): ``line`` for a text line, ``text`` for
+#: multi-line text. A row with neither is shown, not edited, in the canvas.
+#: The public renderer never reads it. PARITY: ``data.ts`` spells the same
+#: tuple.
+INPUTS = ("line", "text")
 
 #: The section block's two layouts, in sidebar order, with their labels.
 #: PARITY with ``data.ts``.
@@ -103,7 +110,8 @@ def catalog(data):
     ``[]`` for every node the server has not serialized — a freshly inserted
     block, an API-authored one, a test fixture — and for a node whose
     derivation failed. A row must carry a slug ``id``, a string ``title`` and
-    a ``kind`` the renderers know; anything else is not a row.
+    a ``kind`` the renderers know; anything else is not a row. ``input`` is
+    one of ``INPUTS`` or ``""``.
     """
     value = (data or {}).get("catalog")
     if not isinstance(value, list):
@@ -116,11 +124,13 @@ def catalog(data):
         kind = text(row.get("kind"))
         if not field_id or kind not in KINDS:
             continue
+        control = text(row.get("input"))
         rows.append({
             "id": field_id,
             "title": text(row.get("title")),
             "kind": kind,
             "value": row.get("value"),
+            "input": control if control in INPUTS else "",
         })
     return rows
 

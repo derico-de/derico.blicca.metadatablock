@@ -42,6 +42,16 @@ export const KINDS = ['text', 'richtext', 'list', 'links', 'image', 'file'] as c
 
 export type Kind = (typeof KINDS)[number];
 
+/**
+ * The inline controls the canvas can offer for a `text`-kind row, named by
+ * the server per field (ADR 0002): `line` for a text line, `text` for
+ * multi-line text. A row with neither is shown, not edited, in the canvas;
+ * the `view` never reads it. PARITY: `metadata_data.INPUTS`.
+ */
+export const INPUTS = ['line', 'text'] as const;
+
+export type Input = (typeof INPUTS)[number] | '';
+
 /** The section block's two layouts, in sidebar order. PARITY with `metadata_data.LAYOUTS`. */
 export const LAYOUTS = [
   ['list', 'List'],
@@ -76,7 +86,7 @@ export const LINK_SCHEMES = ['http', 'https', 'mailto', 'tel'] as const;
  */
 export const DERIVED_KEYS = ['catalog'] as const;
 
-export type Row = { id: string; title: string; kind: Kind; value: unknown };
+export type Row = { id: string; title: string; kind: Kind; value: unknown; input: Input };
 
 export type Link = { href: string; title: string };
 export type Image = { src: string; alt: string };
@@ -89,6 +99,8 @@ export type Entry = {
   value: Value | null;
   label: string;
   css: string;
+  /** The inline control the canvas may draw for this field; `''` on the public page's terms. */
+  input: Input;
 };
 
 export type MetadataEntry = Entry & { placeholder: string };
@@ -129,7 +141,8 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
  * freshly inserted block, an API-authored one, a fixture. `null` rather than
  * `[]` so the editor can tell "never derived" from "derived and empty"
  * (`catalog-source.ts`). A row must carry a slug `id`, a string `title` and
- * a `kind` the renderers know; anything else is not a row.
+ * a `kind` the renderers know; anything else is not a row. `input` is one
+ * of `INPUTS` or `''`.
  */
 export function catalog(data: { catalog?: unknown }): Row[] | null {
   const value = data.catalog;
@@ -140,7 +153,14 @@ export function catalog(data: { catalog?: unknown }): Row[] | null {
     const id = fieldSlug(raw.id);
     const kind = text(raw.kind);
     if (!id || !(KINDS as readonly string[]).includes(kind)) continue;
-    rows.push({ id, title: text(raw.title), kind: kind as Kind, value: raw.value });
+    const control = text(raw.input);
+    rows.push({
+      id,
+      title: text(raw.title),
+      kind: kind as Kind,
+      value: raw.value,
+      input: (INPUTS as readonly string[]).includes(control) ? (control as Input) : '',
+    });
   }
   return rows;
 }
@@ -197,6 +217,7 @@ export function entry(row: Row, showLabel: boolean): Entry {
     value: resolveValue(row.kind, row.value),
     label: showLabel && row.title ? row.title : '',
     css: `metadata-block has--field--${row.id} has--kind--${row.kind}`,
+    input: row.input,
   };
 }
 
@@ -235,6 +256,7 @@ export function metadataEntry(data: MetadataData): MetadataEntry {
     value: null,
     label: '',
     css: slug ? `metadata-block has--field--${slug}` : 'metadata-block',
+    input: '',
     placeholder: fieldId ? placeholder(data) : '',
   };
 }
@@ -272,14 +294,21 @@ export function fieldSpecs(data: MetadataSectionData): FieldSpec[] {
  * The fields that render, in stored order, each with a value to show. A
  * field the catalog does not know and a field with nothing to show both
  * render nothing.
+ *
+ * `keepEmpty` is the CANVAS's one departure from that rule, with no Python
+ * twin: an empty field the author may type into is kept so it can be
+ * filled. The public renderers never pass it.
  */
-export function sectionEntries(data: MetadataSectionData): Entry[] {
+export function sectionEntries(
+  data: MetadataSectionData,
+  keepEmpty?: (candidate: Entry) => boolean,
+): Entry[] {
   const found: Entry[] = [];
   for (const spec of fieldSpecs(data)) {
     const row = rowFor(data, spec.field);
     if (!row) continue;
     const candidate = entry(row, spec.showLabel);
-    if (candidate.value !== null) found.push(candidate);
+    if (candidate.value !== null || keepEmpty?.(candidate)) found.push(candidate);
   }
   return found;
 }

@@ -56,6 +56,9 @@ class TestParity:
     def test_kinds_match(self):
         assert ts_array("KINDS") == metadata_data.KINDS
 
+    def test_inputs_match(self):
+        assert ts_array("INPUTS") == metadata_data.INPUTS
+
     def test_layouts_match(self):
         assert ts_pairs("LAYOUTS") == metadata_data.LAYOUTS
 
@@ -100,7 +103,13 @@ class TestCatalog:
             ]
         })
         assert [row["id"] for row in rows] == ["title", "subjects"]
-        assert rows[0] == {"id": "title", "title": "Title", "kind": "text", "value": "A"}
+        assert rows[0] == {
+            "id": "title",
+            "title": "Title",
+            "kind": "text",
+            "value": "A",
+            "input": "",
+        }
 
     @pytest.mark.parametrize("value", [None, "x", {"title": {}}, 42])
     def test_answers_nothing_for_a_catalog_of_the_wrong_shape(self, value):
@@ -117,7 +126,20 @@ class TestCatalog:
                 {"id": "ok", "kind": "text"},
             ]
         })
-        assert rows == [{"id": "ok", "title": "", "kind": "text", "value": None}]
+        assert rows == [
+            {"id": "ok", "title": "", "kind": "text", "value": None, "input": ""}
+        ]
+
+    def test_keeps_an_input_it_knows_and_drops_one_it_does_not(self):
+        rows = metadata_data.catalog({
+            "catalog": [
+                {"id": "title", "kind": "text", "input": "line"},
+                {"id": "description", "kind": "text", "input": "text"},
+                {"id": "text", "kind": "richtext", "input": "plate"},
+                {"id": "effective", "kind": "text", "input": None},
+            ]
+        })
+        assert [row["input"] for row in rows] == ["line", "text", "", ""]
 
     def test_row_for(self):
         data = {"catalog": [{"id": "title", "title": "T", "kind": "text", "value": "A"}]}

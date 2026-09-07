@@ -6,7 +6,14 @@
  * the section's list rows, `td` in its table rows. Rich text is authored
  * HTML the server already ran through the field's output transform;
  * `dangerouslySetInnerHTML` is what a Chameleon `structure` is.
+ *
+ * `input` is the canvas's inline control for a text field (ADR 0002). When
+ * the editor hands one over it sits INSIDE the text value element, which is
+ * then emitted even for an empty value so there is something to type into.
+ * The `view` never passes one, and the template has no twin for it.
  */
+import type { ReactNode } from 'react';
+
 import type { Entry, Image, Link } from './data';
 
 export type MetadataValueProps = {
@@ -14,11 +21,14 @@ export type MetadataValueProps = {
   tag: 'div' | 'td';
   /** Drops every `href`: a live link in the canvas navigates away from unsaved work. */
   isEditMode?: boolean;
+  /** The canvas's control for an editable text field; never on the public page. */
+  input?: ReactNode;
 };
 
-export function MetadataValue({ entry, tag, isEditMode }: MetadataValueProps) {
-  if (entry.value === null || !entry.kind) return null;
+export function MetadataValue({ entry, tag, isEditMode, input }: MetadataValueProps) {
   const Tag = tag;
+  if (input) return <Tag className="metadata-value metadata-value--text">{input}</Tag>;
+  if (entry.value === null || !entry.kind) return null;
   const className = `metadata-value metadata-value--${entry.kind}`;
   const href = (target: string) => (isEditMode ? {} : { href: target });
 

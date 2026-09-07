@@ -30,12 +30,12 @@ by the European Environment Agency: the same two blocks, the same block ids
 you, EEA, for showing how metadata belongs in the blocks area.
 
 Two things are different on purpose, because the hosts are different. In
-Volto the blocks *edit* the field inline; here they *show* it, and the value
-is edited where Blicca edits every non-block field, on the Content tab (the
-title is also edited in the canvas's title node, and the preview follows it).
-And no field is formatted in the browser: the server reduces every field to
-one of six display kinds, so both renderers know six shapes and no field
-types.
+Volto every field is edited inline with its own widget; here only plain text
+fields are — a title, a description, any text line or text the user may
+write — typed straight into the block, while every other field is *shown*
+and edited where Blicca edits every non-block field, on the Content tab. And
+no field is formatted in the browser: the server reduces every field to one
+of six display kinds, so both renderers know six shapes and no field types.
 
 ## Features
 
@@ -53,9 +53,16 @@ types.
 - **Always current.** Values are not stored with the block. They are
   derived on every page load from the page itself, for the current user,
   and never written back.
+- **Plain text is typed in place.** A text line or text field the author
+  may write — the title, the description — gets a bare text control where
+  its value goes, in the single block and in a section's rows and table
+  cells. Typing edits the page's field, every Metadata block on the canvas
+  follows at once (so does the title node), and Save stores it with the
+  blocks. Every other field is edited on the Content tab, and the canvas
+  says which is which.
 - **Live preview in the editor.** A freshly inserted block previews the
   page's fields before it is ever saved, tells the author which chosen
-  fields are empty here, and follows the title as it is typed.
+  fields are empty here, and follows every field typed on the canvas.
 - **Same markup on every surface.** The public page, the editor canvas and
   an Aurora frontend all render the same HTML, dressed by one stylesheet.
 - **Themeable through CSS custom properties.** Fifteen `--metadata-*`
@@ -66,7 +73,9 @@ types.
 ## Requirements
 
 - Plone 6.0 or later
-- `plone.blicca.auroraeditor` 1.0.0a2 or later
+- `plone.blicca.auroraeditor` 1.0.0a2 or later; inline editing needs a
+  wrapper that sends canvas-edited fields with the save (block add-on
+  contract §1.7)
 
 The JavaScript bundle is committed to the package. Nothing needs Node at
 install time.
@@ -114,6 +123,15 @@ every load; the canvas previews them as *you* see them, and a field the
 current user may not read is not offered. A field that is empty on the page
 renders nothing (or the placeholder, for the single block); in a section it
 is skipped, and the canvas says so.
+
+A plain text field — a text line such as the title, or a text such as the
+description — can be typed right in the block: the canvas draws a text
+control where the value goes (an empty one shows the placeholder, or the
+field's title). What you type is the page's field, so a section that shows
+the same field updates as you type, and so does the title at the top of the
+canvas. Save stores it together with the blocks. Fields you may not write,
+and every other kind of field, are shown as the visitor gets them and
+edited on the **Content** tab.
 
 ## Rendered markup
 
@@ -169,9 +187,12 @@ come from the server:
 
 1. On every load of a page, a `plone.restapi` block serialization
    transformer derives the page's **catalog** — every field the current user
-   may read, as `{id, title, kind, value}` rows in schema order, the value
-   already reduced to its display kind and formatted for the request's
-   locale — and injects it into the block data as `catalog`.
+   may read, as `{id, title, kind, value, input}` rows in schema order, the
+   value already reduced to its display kind and formatted for the request's
+   locale, and `input` naming the inline control the canvas may offer
+   (`line` for a text line, `text` for text, empty otherwise — decided from
+   the field type and the user's write permission) — and injects it into
+   the block data as `catalog`.
 2. On save, a matching deserialization transformer strips `catalog` again,
    so it is never written to the database and can never go stale.
 3. The renderers read the chosen fields out of the catalog and print them.
@@ -187,6 +208,14 @@ A freshly inserted block has no catalog yet. The editor canvas fetches one
 from the page's `@metadata-catalog` REST endpoint, which this package adds
 and which returns exactly what the transformer injects, once per page load,
 and previews from that.
+
+Inline editing rides the host's own machinery: the canvas binds a text
+field to the editor's form atom with the same `useFieldFocusedAtom` hook
+Aurora's title node uses, and the Blicca wrapper's save carries every field
+of that atom the canvas changed next to the blocks (block add-on contract
+§1.7). The control is a plain `<textarea class="metadata-input">` inside
+the value element; it stops its keyboard and clipboard events so the
+editor's own handlers never see them. The public page never carries it.
 
 The transformers are registered for content with the `IBlocks` behavior and
 for the site root, so a block stored on the site root (a footer) shows the
@@ -273,6 +302,8 @@ Things to know when using it in an Aurora frontend:
   `view`s read the `catalog` the server injects, and the sidebar's field
   select is filled from it. Without the backend add-on the blocks render
   their empty roots.
+- **Inline editing works.** The blocks bind the `formAtom` utility
+  `@plone/cmsui` registers, and Aurora's form persists every field.
 - **The editor preview of a new block is anonymous.** The fallback fetch of
   `@metadata-catalog` is a plain same-origin `fetch`. Under Blicca the
   session cookie authenticates it. In Aurora the API token does not reach

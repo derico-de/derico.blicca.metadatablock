@@ -153,6 +153,42 @@
   width: var(--metadata-table-label-width, 30%);
 }
 
+/* ── the canvas's inline control ────────────────────────────────────────
+ *
+ * Drawn by the editor only, INSIDE the text value element, for a field the
+ * server marked editable (ADR 0002); the published page never carries it.
+ * It inherits the value's type so the author types into what the visitor
+ * will read, and grows with its text. No outline of its own (rule 5): the
+ * host's `:focus-visible` style reaches it.
+ */
+
+.metadata-block .metadata-input,
+.metadata-section-block .metadata-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+  resize: none;
+  field-sizing: content;
+}
+
+.metadata-block .metadata-input::placeholder,
+.metadata-section-block .metadata-input::placeholder {
+  color: GrayText;
+  font-style: italic;
+  opacity: 1;
+}
+
 /* ── the editor's own chrome ────────────────────────────────────────────
  *
  * EXCEPTION TO DESCENT (rule 3): rendered OUTSIDE the block root, reachable

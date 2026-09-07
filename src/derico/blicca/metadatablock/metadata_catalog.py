@@ -6,17 +6,21 @@ fields exist depends on the portal type and its behaviors; what a value
 looks like depends on the field type; whether the visitor may read it depends
 on the field's read permission. All of that is decided HERE, once per
 request, and handed to both renderers as data (block add-on contract §5.3):
-a list of ``{id, title, kind, value}`` rows in schema order, ``kind`` one of
-the six ``metadata_data.KINDS`` and ``value`` already reduced to that kind's
-shape — or ``None`` when the field is empty, so the sidebar can still offer
-the field.
+a list of ``{id, title, kind, value, input}`` rows in schema order, ``kind``
+one of the six ``metadata_data.KINDS`` and ``value`` already reduced to that
+kind's shape — or ``None`` when the field is empty, so the sidebar can still
+offer the field — and ``input`` naming the inline control the canvas may
+offer for the field (``metadata_data.INPUTS``), or ``""`` when the field is
+shown but not edited there.
 
 Values are read through ``plone.restapi``'s field serializers rather than
 off the object, for the same reason the Actions block computes its rows the
 way ``@actions`` does: the restapi shapes (choice titles, resolved relations,
 image scales, output-transformed rich text) are the ones every other Aurora
 surface already sees. Field-level read permissions are honoured the way
-restapi honours them (``plone.autoform``'s ``READ_PERMISSIONS_KEY``).
+restapi honours them (``plone.autoform``'s ``READ_PERMISSIONS_KEY``), and
+editability the way restapi's deserializer decides it — the field's write
+permission on top of ``Modify portal content`` (ADR 0002).
 
 Deliberately NOT ``ISerializeToJson`` on the whole object: that would
 serialize the ``blocks`` field, run this add-on's own transformer inside it,
@@ -27,9 +31,11 @@ import logging
 
 from AccessControl import getSecurityManager
 from plone.autoform.interfaces import READ_PERMISSIONS_KEY
+from plone.autoform.interfaces import WRITE_PERMISSIONS_KEY
 from plone.dexterity.utils import iterSchemata
 from plone.restapi.interfaces import IFieldSerializer
 from plone.supermodel.utils import mergedTaggedValueDict
+from Products.CMFCore.permissions import ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from zope.annotation.interfaces import IAnnotations
 from zope.component import getMultiAdapter
@@ -37,13 +43,17 @@ from zope.component import queryMultiAdapter
 from zope.i18n import translate
 from zope.i18nmessageid import MessageFactory
 from zope.schema import getFieldsInOrder
+from zope.schema.interfaces import IASCII
 from zope.schema.interfaces import IBool
 from zope.schema.interfaces import ICollection
 from zope.schema.interfaces import IDate
 from zope.schema.interfaces import IDatetime
 from zope.schema.interfaces import IDecimal
+from zope.schema.interfaces import IDottedName
 from zope.schema.interfaces import IFloat
+from zope.schema.interfaces import IId
 from zope.schema.interfaces import IInt
+from zope.schema.interfaces import IPassword
 from zope.schema.interfaces import IText
 from zope.schema.interfaces import ITextLine
 from zope.schema.interfaces import IURI
@@ -108,11 +118,53 @@ def _kind_of(field):
     return None
 
 
+#: Text-line and text fields that are NOT plain prose, and so get no inline
+#: control: a URI, a password, an identifier, ASCII-only data. Each provides
+#: ``ITextLine`` or ``IText`` through zope.schema's native-string aliases.
+_NOT_PROSE = (IURI, IPassword, IId, IDottedName, IASCII)
+
+
+def _input_of(field):
+    """The inline control for a ``text``-kind field, or ``None``.
+
+    ``line`` for a text line (a title), ``text`` for multi-line text (a
+    description): the two shapes the canvas can offer a plain control for
+    without reformatting on the way in. Rich text is Plate's business, and
+    a date, a number, a boolean or a choice is shown formatted and edited on
+    the Content tab. A ``readonly`` field is never offered.
+    """
+    if getattr(field, "readonly", False):
+        return None
+    if any(iface.providedBy(field) for iface in _NOT_PROSE):
+        return None
+    if ITextLine.providedBy(field):
+        return "line"
+    if IText.providedBy(field):
+        return "text"
+    return None
+
+
 def _may_read(schema, field_name, context):
     permission = mergedTaggedValueDict(schema, READ_PERMISSIONS_KEY).get(field_name)
     if not permission:
         return True
     return bool(getSecurityManager().checkPermission(permission, context))
+
+
+def _may_write(schema, field_name, context):
+    """Whether the content PATCH would accept ``field_name`` from this user.
+
+    The same two gates ``plone.restapi``'s deserializer applies: ``Modify
+    portal content`` on the object, then the field's own write permission
+    when the schema tags one.
+    """
+    manager = getSecurityManager()
+    if not manager.checkPermission(ModifyPortalContent, context):
+        return False
+    permission = mergedTaggedValueDict(schema, WRITE_PERMISSIONS_KEY).get(field_name)
+    if not permission:
+        return True
+    return bool(manager.checkPermission(permission, context))
 
 
 def _serialized(field, context, request):
@@ -203,11 +255,13 @@ def _schema_rows(context, request):
                 # every other field: log it and offer the field empty.
                 logger.exception("Could not read field %s on %s", name, context.absolute_url())
                 value = None
+            control = _input_of(field) if kind == "text" else None
             rows.append({
                 "id": name,
                 "title": translate(field.title, context=request) or name,
                 "kind": kind,
                 "value": value,
+                "input": control if control and _may_write(schema, name, context) else "",
             })
     return rows
 
@@ -229,6 +283,7 @@ def _system_rows(context, request):
             "value": (plone_view.toLocalizedTime(value, long_format=True) or None)
             if value
             else None,
+            "input": "",
         })
     workflow = getToolByName(context, "portal_workflow", None)
     state = workflow.getInfoFor(context, "review_state", None) if workflow is not None else None
@@ -241,6 +296,7 @@ def _system_rows(context, request):
         "title": translate(_plone("State"), context=request),
         "kind": "text",
         "value": title,
+        "input": "",
     })
     return rows
 

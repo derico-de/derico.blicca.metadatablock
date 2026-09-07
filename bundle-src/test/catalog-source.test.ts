@@ -51,7 +51,7 @@ describe('fetchCatalog', () => {
     });
     vi.stubGlobal('fetch', fetch);
     await expect(fetchCatalog('http://x/@metadata-catalog')).resolves.toEqual([
-      { id: 'title', title: 'T', kind: 'text', value: 'A' },
+      { id: 'title', title: 'T', kind: 'text', value: 'A', input: '' },
     ]);
     expect(fetch).toHaveBeenCalledWith('http://x/@metadata-catalog', {
       headers: { Accept: 'application/json' },
