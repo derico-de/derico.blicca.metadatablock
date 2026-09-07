@@ -216,7 +216,10 @@ def _system_rows(context, request):
     """Rows for facts every content item has that no schema field holds."""
     plone_view = getMultiAdapter((context, request), name="plone")
     rows = []
-    for name, label in (("created", _plone("Created")), ("modified", _plone("Modified"))):
+    # Message ids the `plone` domain actually carries (Plone has no bare
+    # "Created" / "Modified"): the querystring's date labels.
+    labels = (("created", _plone("Creation date")), ("modified", _plone("Modification date")))
+    for name, label in labels:
         stamp = getattr(context, name, None)
         value = stamp() if callable(stamp) else stamp
         rows.append({
