@@ -25,6 +25,60 @@
       directory="profiles/uninstall"
       />
 
+  <!-- The catalog is the server's: which fields the content item has, what
+       they hold and whether the current user may read them is derived at
+       load time by these pairs and stripped again on save (block add-on
+       contract §5.3). Neither renderer reads a field off the object. The
+       deserializers are not optional — unpaired, the derived catalog would
+       be written back on the next save and go stale the moment a field
+       changes. One pair per block type per context kind. -->
+  <subscriber
+      factory=".metadata_transform.MetadataCatalogSerializer"
+      provides="plone.restapi.interfaces.IBlockFieldSerializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataCatalogSerializerRoot"
+      provides="plone.restapi.interfaces.IBlockFieldSerializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataCatalogDeserializer"
+      provides="plone.restapi.interfaces.IBlockFieldDeserializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataCatalogDeserializerRoot"
+      provides="plone.restapi.interfaces.IBlockFieldDeserializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataSectionCatalogSerializer"
+      provides="plone.restapi.interfaces.IBlockFieldSerializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataSectionCatalogSerializerRoot"
+      provides="plone.restapi.interfaces.IBlockFieldSerializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataSectionCatalogDeserializer"
+      provides="plone.restapi.interfaces.IBlockFieldDeserializationTransformer"
+      />
+  <subscriber
+      factory=".metadata_transform.MetadataSectionCatalogDeserializerRoot"
+      provides="plone.restapi.interfaces.IBlockFieldDeserializationTransformer"
+      />
+
+  <!-- Serves the committed editor bundle and its scope-wrapped sheet as
+       ++plone++derico.blicca.metadatablock/... (block add-on contract §3.1:
+       artifacts are committed, no Node at install time).
+
+       `type="plone"` is not cosmetic. ++resource++ would serve the very same
+       file under a second URL, and two URLs for one JS module means two
+       module instances, hence two Reacts, hence a block that throws inside
+       Plate. The registry records' `bundle` and `css` spell this same name. -->
+  <plone:static
+      name="derico.blicca.metadatablock"
+      type="plone"
+      directory="static"
+      />
+
   <genericsetup:importStep
       name="derico.blicca.metadatablock-uninstall"
       title="Derico Blicca Metadatablock uninstall"

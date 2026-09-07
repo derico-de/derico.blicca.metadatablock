@@ -1,33 +1,26 @@
-"""metadata-catalog REST API service.
+"""``@metadata-catalog``: the catalog the blocks' serializer derives, on demand.
 
-The content's metadata catalog as the block's serializer derives it, for the editor canvas
+The canvas's one exception to reading the catalog off the node: a block the
+server has never serialized — freshly inserted — carries none, so the editor
+fetches this service for the object being edited, once per page, and previews
+from it. It answers with exactly the rows ``metadata_transform`` injects
+(``tests/test_metadata_transform.TestServiceParity`` holds the two level), so
+what the canvas shows is what the next load will carry.
+
+``GET <object>/@metadata-catalog`` → ``{"@id": ..., "catalog": [rows]}``.
 """
+
+from plone.restapi.serializer.converters import json_compatible
 from plone.restapi.services import Service
-from zope.interface import implementer
-from zope.publisher.interfaces import IPublishTraverse
+
+from derico.blicca.metadatablock.metadata_catalog import content_catalog
 
 
-@implementer(IPublishTraverse)
 class MetadataCatalogGet(Service):
-    """The content's metadata catalog as the block's serializer derives it, for the editor canvas
-
-    Endpoint: GET @metadata-catalog
-    """
-
-    def __init__(self, context, request):
-        super().__init__(context, request)
-        self.params = []
-
-    def publishTraverse(self, request, name):
-        """Handle URL path segments after the endpoint."""
-        self.params.append(name)
-        return self
+    """The content's metadata catalog for the current user."""
 
     def reply(self):
-        """Return the JSON response."""
         return {
-            "service": "@metadata-catalog",
-            "status": "ok",
-            "params": self.params,
-            # Add your response data here
+            "@id": f"{self.context.absolute_url()}/@metadata-catalog",
+            "catalog": json_compatible(content_catalog(self.context, self.request)),
         }

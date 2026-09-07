@@ -1,27 +1,27 @@
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:tal="http://xml.zope.org/namespaces/tal"
-      xmlns:metal="http://xml.zope.org/namespaces/metal"
-      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
-      lang="en"
-      metal:use-macro="context/main_template/macros/master"
-      i18n_domain="derico.blicca.metadatablock">
-
-  <body>
-    <metal:title fill-slot="content-title">
-      <h1 class="documentFirstHeading" tal:content="structure context/@@title">
-        Title
-      </h1>
-    </metal:title>
-
-    <metal:description fill-slot="content-description">
-      <p class="documentDescription" tal:content="structure context/@@description">
-        Description
-      </p>
-    </metal:description>
-
-    <metal:content-core fill-slot="content-core">
-      <h2>MetadataSectionBlockView</h2>
-      <p>The Metadata Section block's public renderer</p>
-    </metal:content-core>
-  </body>
-</html>
+<section xmlns:tal="http://xml.zope.org/namespaces/tal"
+         xmlns:metal="http://xml.zope.org/namespaces/metal"
+         tal:define="title view/title; layout view/layout; entries view/entries"
+         tal:attributes="class view/root_class; aria-label title or None">
+  <!--! The Metadata Section block's anatomy: the same markup
+        `bundle-src/src/metadata/MetadataSectionView.tsx` emits. See
+        `metadata_block_view.pt` for the rules; the list layout repeats the
+        single block's anatomy per field, the table layout puts one row per
+        field with the title always in the header cell. -->
+  <h2 class="metadata-section-title" tal:condition="title" tal:content="title">Title</h2>
+  <div class="metadata-section-list" tal:condition="python: entries and layout == 'list'">
+    <div tal:repeat="entry entries" tal:attributes="class entry/css" tal:define="tag string:div">
+      <span class="metadata-label" tal:condition="entry/label" tal:content="entry/label">Label</span>
+      <metal:value use-macro="view/value_template/macros/value" />
+    </div>
+  </div>
+  <table class="metadata-section-table" tal:condition="python: entries and layout == 'table'">
+    <tbody>
+      <tr tal:repeat="entry entries"
+          tal:attributes="class string:metadata-section-row has--field--${entry/id} has--kind--${entry/kind}"
+          tal:define="tag string:td">
+        <th class="metadata-label" scope="row" tal:content="entry/title">Label</th>
+        <metal:value use-macro="view/value_template/macros/value" />
+      </tr>
+    </tbody>
+  </table>
+</section>

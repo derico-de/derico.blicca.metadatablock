@@ -1,15 +1,31 @@
-"""MetadataSectionBlockView browser view.
+"""The Metadata Section block's public renderer (``@@aurora-block-metadataSection``).
 
-The Metadata Section block's public renderer
+The section's counterpart to ``metadata_block_view``: same dispatch
+convention, same parity rule against ``MetadataSectionView.tsx``, same
+fixture. The rows are the single block's anatomy repeated (list layout) or
+one table row per field (table layout); the value markup is shared with the
+single block through the ``value`` macro in ``metadata_value.pt``.
 """
-from Products.Five.browser import BrowserView
+
+from derico.blicca.metadatablock import metadata_data
+from derico.blicca.metadatablock.views.rendering import MetadataRenderingBase
 
 
-class MetadataSectionBlockView(BrowserView):
-    """The Metadata Section block's public renderer"""
+class MetadataSectionBlockView(MetadataRenderingBase):
+    """Render a metadata section block."""
 
-    # If you need to override the template registered in configure.zcml:
-    # index = ViewPageTemplateFile("metadata_section_block_view.pt")
+    @property
+    def title(self):
+        return metadata_data.section_title(self.block)
 
-    def __call__(self):
-        return self.index()
+    @property
+    def layout(self):
+        return metadata_data.effective_layout(self.block)
+
+    @property
+    def root_class(self):
+        return f"metadata-section-block has--layout--{self.layout}"
+
+    @property
+    def entries(self):
+        return list(self.prepare(metadata_data.section_entries(self.block)))

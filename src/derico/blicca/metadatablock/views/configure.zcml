@@ -3,6 +3,9 @@
     xmlns:browser="http://namespaces.zope.org/browser"
     i18n_domain="derico.blicca.metadatablock">
 
+  <!-- The dispatch convention (block add-on contract §5.1): the view name is
+       `aurora-block-<@type>` and nothing else. `for="*"`: a metadata block
+       can be authored on any blocks container, and on the site root. -->
   <browser:page
       name="aurora-block-metadata"
       for="*"

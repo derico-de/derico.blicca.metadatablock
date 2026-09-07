@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<registry>
+
+  <!-- TWO IAuroraBlockAddon records for the two blocks this package ships,
+       ONE bundle (block add-on contract §3.2: records, not packages, are the
+       unit). Discovery is per site, so a record is what makes the committed
+       bundle reachable at all: without it nothing loads the editor half,
+       however correct the JS is.
+
+       Both records name the same bundle, and `loadBlockAddons` calls its
+       `install(config)` once PER RECORD with no dedupe. The bundle's install
+       is therefore idempotent, and each record's `types` names the block it
+       stands for so disabling one record disables one block in the slash
+       menu — the per-record gate the wrapper applies after install.
+
+       Not a `plone.bundles` record: a bundle emits `<script src defer>`, not
+       `type="module"`, so the bundle's bare `react` / `platejs` imports would
+       miss the import map @@aurora-edit emits and a SECOND React would load. -->
+  <records
+      interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
+      prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadata"
+      >
+
+    <!-- `++plone++`, never `++resource++`: two URLs for one JS module means
+         two module instances, hence two Reacts. The directory is registered
+         by the `plone:static` node in configure.zcml; the two spellings have
+         to stay in lockstep. -->
+    <value key="bundle">++plone++derico.blicca.metadatablock/metadata-block.js</value>
+
+    <!-- The FLOOR the block needs, not the host's current version. A §2.4
+         mismatch is a fail-soft skip: the block silently vanishes from the
+         slash menu. "1.0" is the most permissive compatible declaration. -->
+    <value key="block_api">1.0</value>
+
+    <!-- The scope-wrapped sheet that dresses BOTH surfaces: the wrapper links
+         it in the head of the edit page and of the public blocks view alike. -->
+    <value key="css">++plone++derico.blicca.metadatablock/metadata-block.css</value>
+
+    <!-- Diagnostics and insert-gating, never dispatch. -->
+    <value key="types">
+      <element>metadata</element>
+    </value>
+
+    <!-- No `permission`: the blocks are generic and for every editor. -->
+
+    <value key="enabled">True</value>
+    <value key="weight">100</value>
+  </records>
+
+  <records
+      interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
+      prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadataSection"
+      >
+    <value key="bundle">++plone++derico.blicca.metadatablock/metadata-block.js</value>
+    <value key="block_api">1.0</value>
+    <value key="css">++plone++derico.blicca.metadatablock/metadata-block.css</value>
+    <value key="types">
+      <element>metadataSection</element>
+    </value>
+    <value key="enabled">True</value>
+    <value key="weight">100</value>
+  </records>
+
+</registry>

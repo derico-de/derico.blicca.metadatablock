@@ -1,0 +1,43 @@
+<metal:block xmlns:tal="http://xml.zope.org/namespaces/tal"
+             xmlns:metal="http://xml.zope.org/namespaces/metal">
+  <!--! The value markup both blocks share, one branch per display kind.
+        `entry` is a `metadata_data.entry` prepared by `MetadataRenderingBase`
+        (rich text arrives as a token, spliced back after the whitespace
+        collapse); `tag` names the element the value sits in: `div` in the
+        single block and the section's list rows, `td` in its table rows.
+
+        Commentary must use the `!` form. Chameleon refuses an ASCII double
+        hyphen anywhere inside a comment, and an ordinary HTML comment would
+        ship to every visitor besides.
+
+        PARITY: `bundle-src/src/metadata/MetadataValue.tsx` emits the same
+        markup branch for branch. -->
+  <metal:value define-macro="value">
+    <tal:kind tal:condition="python: entry['value'] is not None">
+      <tal:text tal:condition="python: entry['kind'] == 'text'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--text" tal:content="entry/value">Text</div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--text" tal:content="entry/value">Text</td></tal:td>
+      </tal:text>
+      <tal:richtext tal:condition="python: entry['kind'] == 'richtext'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--richtext" tal:content="structure entry/value">Text</div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--richtext" tal:content="structure entry/value">Text</td></tal:td>
+      </tal:richtext>
+      <tal:list tal:condition="python: entry['kind'] == 'list'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--list"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value" tal:content="item">Item</li></ul></div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--list"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value" tal:content="item">Item</li></ul></td></tal:td>
+      </tal:list>
+      <tal:links tal:condition="python: entry['kind'] == 'links'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--links"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value"><a class="metadata-link" tal:attributes="href item/href" tal:content="item/title">Item</a></li></ul></div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--links"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value"><a class="metadata-link" tal:attributes="href item/href" tal:content="item/title">Item</a></li></ul></td></tal:td>
+      </tal:links>
+      <tal:image tal:condition="python: entry['kind'] == 'image'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--image"><img class="metadata-image" tal:attributes="src entry/value/src; alt entry/value/alt" /></div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--image"><img class="metadata-image" tal:attributes="src entry/value/src; alt entry/value/alt" /></td></tal:td>
+      </tal:image>
+      <tal:file tal:condition="python: entry['kind'] == 'file'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--file"><a class="metadata-link" tal:attributes="href entry/value/href" tal:content="entry/value/title">File</a></div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--file"><a class="metadata-link" tal:attributes="href entry/value/href" tal:content="entry/value/title">File</a></td></tal:td>
+      </tal:file>
+    </tal:kind>
+  </metal:value>
+</metal:block>

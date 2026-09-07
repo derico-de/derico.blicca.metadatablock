@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<registry>
+
+  <!-- Lockstep with the browser layer the uninstall profile also removes. An
+       orphaned record would keep @@aurora-edit loading a bundle whose server
+       renderers are gone, so the blocks would still appear in the slash menu
+       of a site that can no longer render them, and existing blocks would
+       publish as `block-unrendered`.
+
+       One node per record prefix; `remove` expands to one `<value purge>` per
+       field of the named interface under that prefix, so it removes exactly
+       this record and never a longer name that happens to start with the
+       same characters. -->
+  <records
+      interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
+      prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadata"
+      remove="true"
+      />
+  <records
+      interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
+      prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadataSection"
+      remove="true"
+      />
+
+</registry>

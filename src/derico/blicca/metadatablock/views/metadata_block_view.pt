@@ -1,27 +1,22 @@
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:tal="http://xml.zope.org/namespaces/tal"
-      xmlns:metal="http://xml.zope.org/namespaces/metal"
-      xmlns:i18n="http://xml.zope.org/namespaces/i18n"
-      lang="en"
-      metal:use-macro="context/main_template/macros/master"
-      i18n_domain="derico.blicca.metadatablock">
+<div xmlns:tal="http://xml.zope.org/namespaces/tal"
+     xmlns:metal="http://xml.zope.org/namespaces/metal"
+     tal:define="entry view/entry; tag string:div"
+     tal:attributes="class entry/css">
+  <!--! The Metadata block's anatomy: the same markup
+        `bundle-src/src/metadata/MetadataView.tsx` emits. One scope-wrapped
+        stylesheet dresses both surfaces, so an element added here without a
+        peer there is a bug in both.
 
-  <body>
-    <metal:title fill-slot="content-title">
-      <h1 class="documentFirstHeading" tal:content="structure context/@@title">
-        Title
-      </h1>
-    </metal:title>
+        The indentation below is stripped by `MetadataRenderingBase.__call__`;
+        see `views/rendering.py` for why an inter-element newline is not
+        cosmetic here.
 
-    <metal:description fill-slot="content-description">
-      <p class="documentDescription" tal:content="structure context/@@description">
-        Description
-      </p>
-    </metal:description>
-
-    <metal:content-core fill-slot="content-core">
-      <h2>MetadataBlockView</h2>
-      <p>The Metadata block's public renderer</p>
-    </metal:content-core>
-  </body>
-</html>
+        The root is always emitted, with the stored field and its kind when
+        the catalog knows it; the label, the value and the placeholder are
+        each conditional on their own content. -->
+  <span class="metadata-label" tal:condition="entry/label" tal:content="entry/label">Label</span>
+  <metal:value use-macro="view/value_template/macros/value" />
+  <div class="metadata-value metadata-value--placeholder"
+       tal:condition="entry/placeholder"
+       tal:content="entry/placeholder">Placeholder</div>
+</div>
