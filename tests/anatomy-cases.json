@@ -1,0 +1,324 @@
+{
+  "$comment": [
+    "The two Metadata blocks' anatomy, case by case: the stored node in, the exact markup out.",
+    "",
+    "Hand-authored and read by BOTH renderers' suites — the React `view`s",
+    "(bundle-src/test/metadata-anatomy.test.tsx) and the Chameleon templates",
+    "(src/.../tests/test_view_metadata_block_view.py and",
+    "test_view_metadata_section_block_view.py). The two renderers must emit the",
+    "same anatomy element for element, because one scope-wrapped stylesheet",
+    "dresses both surfaces; this file is what holds them to a FIXED list rather",
+    "than to whichever renderer landed first.",
+    "",
+    "`html` is the markup INSIDE the host's block wrapper, on the PUBLIC surface.",
+    "The wrapper's own `block block-metadata has--block-width--<w>` stamp is the",
+    "host's and is not our output.",
+    "",
+    "No whitespace between elements: the Plate editable computes",
+    "`white-space: pre-wrap`, so an inter-element newline becomes a real line box.",
+    "JSX drops it by construction; the server templates strip their indentation.",
+    "Rich text is the exception: its own whitespace is authored and kept.",
+    "",
+    "Both suites compare EXACTLY, up to attribute order and the void-element",
+    "slash (each sorts attributes and drops `/>` before comparing), and again",
+    "as the SKELETON — every attribute but `class` removed, text kept — which is",
+    "the cross-renderer contract.",
+    "",
+    "The editor surface is `html` with every `href` dropped (the canvas-safety",
+    "rule), and nothing else changed. An `img` keeps its `src`: it navigates",
+    "nowhere.",
+    "",
+    "`catalog` in `data` is the DERIVED key the server's serializer injects: every",
+    "offered field of the content item as an `{id, title, kind, value}` row. A",
+    "node without one is a node the server has never serialized, and both",
+    "renderers draw the empty root."
+  ],
+  "metadata": [
+    {
+      "name": "empty",
+      "note": "Exactly one element: the root. Nothing stored, nothing derived, no modifier.",
+      "data": {},
+      "html": "<div class=\"metadata-block\"></div>"
+    },
+    {
+      "name": "field-without-catalog",
+      "note": "A field chosen on a node the server has never serialized: the root still carries the stored field, so the author can recognise the block, and nothing else renders.",
+      "data": { "field": "description" },
+      "html": "<div class=\"metadata-block has--field--description\"></div>"
+    },
+    {
+      "name": "field-without-catalog-placeholder",
+      "note": "The placeholder is the author's own content: it renders whenever a field is stored and there is no value to show, catalog or not.",
+      "data": { "field": "description", "placeholder": "No summary yet" },
+      "html": "<div class=\"metadata-block has--field--description\"><div class=\"metadata-value metadata-value--placeholder\">No summary yet</div></div>"
+    },
+    {
+      "name": "text",
+      "note": "The reference case: a text field with a value, no label asked for. The root carries the field AND its kind.",
+      "data": {
+        "field": "description",
+        "catalog": [
+          { "id": "title", "title": "Title", "kind": "text", "value": "A doc" },
+          { "id": "description", "title": "Summary", "kind": "text", "value": "A short summary." }
+        ]
+      },
+      "html": "<div class=\"metadata-block has--field--description has--kind--text\"><div class=\"metadata-value metadata-value--text\">A short summary.</div></div>"
+    },
+    {
+      "name": "text-with-label",
+      "note": "The label is the catalog's field title, before the value, only when the author asked for it.",
+      "data": {
+        "field": "description",
+        "showLabel": true,
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": "A short summary." }]
+      },
+      "html": "<div class=\"metadata-block has--field--description has--kind--text\"><span class=\"metadata-label\">Summary</span><div class=\"metadata-value metadata-value--text\">A short summary.</div></div>"
+    },
+    {
+      "name": "label-flag-must-be-true",
+      "note": "Nothing is trusted: a truthy string is not a label request.",
+      "data": {
+        "field": "description",
+        "showLabel": "yes",
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": "A short summary." }]
+      },
+      "html": "<div class=\"metadata-block has--field--description has--kind--text\"><div class=\"metadata-value metadata-value--text\">A short summary.</div></div>"
+    },
+    {
+      "name": "empty-value-with-placeholder",
+      "note": "A known field with nothing in it: the kind is still known, the label still renders, and the placeholder stands in for the value.",
+      "data": {
+        "field": "description",
+        "showLabel": true,
+        "placeholder": "No summary yet",
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": null }]
+      },
+      "html": "<div class=\"metadata-block has--field--description has--kind--text\"><span class=\"metadata-label\">Summary</span><div class=\"metadata-value metadata-value--placeholder\">No summary yet</div></div>"
+    },
+    {
+      "name": "empty-value-without-placeholder",
+      "note": "A known field with nothing in it and no placeholder is the root alone. The canvas says why; the public page says nothing.",
+      "data": {
+        "field": "description",
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": "" }]
+      },
+      "html": "<div class=\"metadata-block has--field--description has--kind--text\"></div>"
+    },
+    {
+      "name": "richtext",
+      "note": "Rich text is emitted as HTML, its own whitespace kept: the space between the two inline elements is authored content.",
+      "data": {
+        "field": "text",
+        "catalog": [{ "id": "text", "title": "Text", "kind": "richtext", "value": "<p>Hello <b>world</b> <i>now</i></p>" }]
+      },
+      "html": "<div class=\"metadata-block has--field--text has--kind--richtext\"><div class=\"metadata-value metadata-value--richtext\"><p>Hello <b>world</b> <i>now</i></p></div></div>"
+    },
+    {
+      "name": "list",
+      "note": "Strings become list items; empty ones are dropped.",
+      "data": {
+        "field": "subjects",
+        "catalog": [{ "id": "subjects", "title": "Tags", "kind": "list", "value": ["Plone", "", "Aurora"] }]
+      },
+      "html": "<div class=\"metadata-block has--field--subjects has--kind--list\"><div class=\"metadata-value metadata-value--list\"><ul class=\"metadata-list\"><li class=\"metadata-item\">Plone</li><li class=\"metadata-item\">Aurora</li></ul></div></div>"
+    },
+    {
+      "name": "links",
+      "note": "Relations become a list of links.",
+      "data": {
+        "field": "relatedItems",
+        "catalog": [{ "id": "relatedItems", "title": "Related", "kind": "links", "value": [
+          { "href": "http://nohost/plone/a", "title": "A" },
+          { "href": "http://nohost/plone/b", "title": "B" }
+        ] }]
+      },
+      "html": "<div class=\"metadata-block has--field--relatedItems has--kind--links\"><div class=\"metadata-value metadata-value--links\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-link\" href=\"http://nohost/plone/a\">A</a></li><li class=\"metadata-item\"><a class=\"metadata-link\" href=\"http://nohost/plone/b\">B</a></li></ul></div></div>"
+    },
+    {
+      "name": "image",
+      "note": "An image field is one img with the scale the server picked and the caption as alt text.",
+      "data": {
+        "field": "image",
+        "catalog": [{ "id": "image", "title": "Lead image", "kind": "image", "value": { "src": "http://nohost/plone/doc/@@images/image-800-abc.jpeg", "alt": "A photo" } }]
+      },
+      "html": "<div class=\"metadata-block has--field--image has--kind--image\"><div class=\"metadata-value metadata-value--image\"><img class=\"metadata-image\" src=\"http://nohost/plone/doc/@@images/image-800-abc.jpeg\" alt=\"A photo\"></div></div>"
+    },
+    {
+      "name": "file",
+      "note": "A file field is one download link named after the file.",
+      "data": {
+        "field": "file",
+        "catalog": [{ "id": "file", "title": "File", "kind": "file", "value": { "href": "http://nohost/plone/doc/@@download/file", "title": "report.pdf" } }]
+      },
+      "html": "<div class=\"metadata-block has--field--file has--kind--file\"><div class=\"metadata-value metadata-value--file\"><a class=\"metadata-link\" href=\"http://nohost/plone/doc/@@download/file\">report.pdf</a></div></div>"
+    },
+    {
+      "name": "field-missing-from-catalog",
+      "note": "A stored field the catalog does not know — a hand-authored node, a field of another type — keeps its modifier and shows nothing; the label needs a title the node does not have.",
+      "data": {
+        "field": "bogus",
+        "showLabel": true,
+        "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }]
+      },
+      "html": "<div class=\"metadata-block has--field--bogus\"></div>"
+    },
+    {
+      "name": "unscreened-link-dropped",
+      "note": "The catalog travels inside a JSON node anyone with API access can hand-author, so a URL is screened like typed input: a scheme outside the allowlist is treated exactly as no link.",
+      "data": {
+        "field": "relatedItems",
+        "catalog": [{ "id": "relatedItems", "title": "Related", "kind": "links", "value": [
+          { "href": "javascript:alert(1)", "title": "Evil" },
+          { "href": "/plone/b", "title": "B" }
+        ] }]
+      },
+      "html": "<div class=\"metadata-block has--field--relatedItems has--kind--links\"><div class=\"metadata-value metadata-value--links\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-link\" href=\"/plone/b\">B</a></li></ul></div></div>"
+    },
+    {
+      "name": "unscreened-image-dropped",
+      "note": "Symmetric for images: an unscreened src is no image, and the placeholder takes its place.",
+      "data": {
+        "field": "image",
+        "placeholder": "No image",
+        "catalog": [{ "id": "image", "title": "Image", "kind": "image", "value": { "src": "javascript:x", "alt": "" } }]
+      },
+      "html": "<div class=\"metadata-block has--field--image has--kind--image\"><div class=\"metadata-value metadata-value--placeholder\">No image</div></div>"
+    },
+    {
+      "name": "unsafe-field-id-gets-no-modifier",
+      "note": "A stored field id that is not a slug gets no class rather than an escaped one, and a catalog row with such an id is no row.",
+      "data": {
+        "field": "a b",
+        "catalog": [{ "id": "a b", "title": "Odd", "kind": "text", "value": "x" }]
+      },
+      "html": "<div class=\"metadata-block\"></div>"
+    },
+    {
+      "name": "catalog-not-a-list",
+      "note": "A hand-authored catalog of the wrong shape is no catalog at all.",
+      "data": { "field": "title", "catalog": { "title": "x" } },
+      "html": "<div class=\"metadata-block has--field--title\"></div>"
+    },
+    {
+      "name": "row-of-unknown-kind-dropped",
+      "note": "A row whose kind the renderers do not know is not a row: the field is treated as missing from the catalog.",
+      "data": {
+        "field": "title",
+        "catalog": [{ "id": "title", "title": "Title", "kind": "table", "value": "x" }]
+      },
+      "html": "<div class=\"metadata-block has--field--title\"></div>"
+    },
+    {
+      "name": "text-value-not-a-string",
+      "note": "The server always emits strings for text rows; anything else is an absent value.",
+      "data": {
+        "field": "title",
+        "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": 42 }]
+      },
+      "html": "<div class=\"metadata-block has--field--title has--kind--text\"></div>"
+    },
+    {
+      "name": "whitespace-trimmed",
+      "note": "Whitespace around a stored field, a title, a value or a placeholder is forgiven.",
+      "data": {
+        "field": " title ",
+        "showLabel": true,
+        "catalog": [{ "id": "title", "title": " Title ", "kind": "text", "value": "  A doc  " }]
+      },
+      "html": "<div class=\"metadata-block has--field--title has--kind--text\"><span class=\"metadata-label\">Title</span><div class=\"metadata-value metadata-value--text\">A doc</div></div>"
+    }
+  ],
+  "metadataSection": [
+    {
+      "name": "empty",
+      "note": "Exactly one element: the root with the DEFAULT layout.",
+      "data": {},
+      "html": "<section class=\"metadata-section-block has--layout--list\"></section>"
+    },
+    {
+      "name": "title-only",
+      "note": "A heading with nothing under it still renders: it is the author's own content, and it doubles as the section's accessible name.",
+      "data": { "title": "Facts" },
+      "html": "<section class=\"metadata-section-block has--layout--list\" aria-label=\"Facts\"><h2 class=\"metadata-section-title\">Facts</h2></section>"
+    },
+    {
+      "name": "fields-without-catalog",
+      "note": "Fields chosen on a node the server has never serialized: the root alone.",
+      "data": { "fields": [{ "field": "title", "showLabel": true }] },
+      "html": "<section class=\"metadata-section-block has--layout--list\"></section>"
+    },
+    {
+      "name": "list-layout",
+      "note": "The reference case: each field repeats the single block's anatomy, in stored order, with the label where it was asked for.",
+      "data": {
+        "fields": [{ "field": "title", "showLabel": true }, { "field": "description" }],
+        "catalog": [
+          { "id": "title", "title": "Title", "kind": "text", "value": "A doc" },
+          { "id": "description", "title": "Summary", "kind": "text", "value": "A short summary." }
+        ]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--list\"><div class=\"metadata-section-list\"><div class=\"metadata-block has--field--title has--kind--text\"><span class=\"metadata-label\">Title</span><div class=\"metadata-value metadata-value--text\">A doc</div></div><div class=\"metadata-block has--field--description has--kind--text\"><div class=\"metadata-value metadata-value--text\">A short summary.</div></div></div></section>"
+    },
+    {
+      "name": "table-layout",
+      "note": "One row per field; the title is always in the header cell, so the label flag has no effect here.",
+      "data": {
+        "title": "Facts",
+        "layout": "table",
+        "fields": [{ "field": "title", "showLabel": true }, { "field": "subjects" }],
+        "catalog": [
+          { "id": "title", "title": "Title", "kind": "text", "value": "A doc" },
+          { "id": "subjects", "title": "Tags", "kind": "list", "value": ["Plone"] }
+        ]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--table\" aria-label=\"Facts\"><h2 class=\"metadata-section-title\">Facts</h2><table class=\"metadata-section-table\"><tbody><tr class=\"metadata-section-row has--field--title has--kind--text\"><th class=\"metadata-label\" scope=\"row\">Title</th><td class=\"metadata-value metadata-value--text\">A doc</td></tr><tr class=\"metadata-section-row has--field--subjects has--kind--list\"><th class=\"metadata-label\" scope=\"row\">Tags</th><td class=\"metadata-value metadata-value--list\"><ul class=\"metadata-list\"><li class=\"metadata-item\">Plone</li></ul></td></tr></tbody></table></section>"
+    },
+    {
+      "name": "table-with-links-and-richtext",
+      "note": "Every kind renders inside a table cell the way it renders inside the single block's value div.",
+      "data": {
+        "layout": "table",
+        "fields": [{ "field": "text" }, { "field": "relatedItems" }],
+        "catalog": [
+          { "id": "text", "title": "Text", "kind": "richtext", "value": "<p>Hi <b>there</b></p>" },
+          { "id": "relatedItems", "title": "Related", "kind": "links", "value": [{ "href": "http://nohost/plone/a", "title": "A" }] }
+        ]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--table\"><table class=\"metadata-section-table\"><tbody><tr class=\"metadata-section-row has--field--text has--kind--richtext\"><th class=\"metadata-label\" scope=\"row\">Text</th><td class=\"metadata-value metadata-value--richtext\"><p>Hi <b>there</b></p></td></tr><tr class=\"metadata-section-row has--field--relatedItems has--kind--links\"><th class=\"metadata-label\" scope=\"row\">Related</th><td class=\"metadata-value metadata-value--links\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-link\" href=\"http://nohost/plone/a\">A</a></li></ul></td></tr></tbody></table></section>"
+    },
+    {
+      "name": "empty-fields-skipped",
+      "note": "A section is a list of facts: a field with nothing to show, and a field the catalog does not know, render nothing — and when every field is skipped, no list container is emitted.",
+      "data": {
+        "fields": [{ "field": "description" }, { "field": "bogus" }],
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": null }]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--list\"></section>"
+    },
+    {
+      "name": "unknown-layout-falls-back",
+      "note": "A layout the block does not offer renders the DEFAULT one.",
+      "data": {
+        "layout": "grid",
+        "fields": [{ "field": "title" }],
+        "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--list\"><div class=\"metadata-section-list\"><div class=\"metadata-block has--field--title has--kind--text\"><div class=\"metadata-value metadata-value--text\">A doc</div></div></div></section>"
+    },
+    {
+      "name": "specs-of-the-wrong-shape-skipped",
+      "note": "A spec that is not an object, or names no field, is skipped; a field named twice renders twice, as authored.",
+      "data": {
+        "fields": ["title", null, { "showLabel": true }, { "field": "title" }, { "field": "title" }],
+        "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--list\"><div class=\"metadata-section-list\"><div class=\"metadata-block has--field--title has--kind--text\"><div class=\"metadata-value metadata-value--text\">A doc</div></div><div class=\"metadata-block has--field--title has--kind--text\"><div class=\"metadata-value metadata-value--text\">A doc</div></div></div></section>"
+    },
+    {
+      "name": "fields-not-a-list",
+      "note": "A hand-authored field list of the wrong shape is no list at all.",
+      "data": { "fields": { "field": "title" }, "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }] },
+      "html": "<section class=\"metadata-section-block has--layout--list\"></section>"
+    }
+  ]
+}

@@ -15,15 +15,29 @@
       destination="1001"
       profile="derico.blicca.metadatablock:default">
 
-    <genericsetup:upgradeStep
+    <!-- No Python handler: everything this version adds to an installed site
+         is declarative, and the upgrade profile carries exactly the one file
+         that changed. The scaffolded `reload_gs_profile` handler was dropped
+         because it re-imports every step of the DEFAULT profile, browser
+         layer and rolemap included, on a site an administrator may have
+         adjusted since.
+
+         `import_steps` narrows it once more: without it GenericSetup runs
+         every registered import step against this profile, and a step whose
+         file is merely absent still runs its handler, so the package's own
+         uninstall step would fire during an upgrade. One file, one step,
+         named.
+
+         The registry copy under `1001/` is a duplicate of
+         `profiles/default/registry.xml` ON PURPOSE: the default profile is
+         what a FRESH install imports, this one is what an EXISTING site at
+         1000 imports, and GenericSetup gives no way to point the second at
+         the first. A test holds the two in lockstep so the copy cannot drift. -->
+    <genericsetup:upgradeDepends
         title="Register the Metadata block add-on records"
         description="Import the IAuroraBlockAddon records that make the committed metadata bundle discoverable"
-        handler=".v1001.upgrade"
-        />
-
-    <genericsetup:upgradeDepends
-        title="Apply profile version 1001"
         import_profile="derico.blicca.metadatablock.upgrades:1001"
+        import_steps="plone.app.registry"
         />
 
   </genericsetup:upgradeSteps>

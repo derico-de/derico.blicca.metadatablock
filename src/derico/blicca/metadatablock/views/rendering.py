@@ -23,7 +23,7 @@ from Products.Five.browser.pagetemplatefile import ViewPageTemplateFile
 #: Template indentation, between two tags. Collapsed away.
 _INDENT = re.compile(r">\s+<")
 
-_TOKEN = "\x00metadata-richtext-{index}\x00"
+_MARKER = "\x00metadata-richtext-{index}\x00"  # noqa: S105 - a placeholder, not a secret
 
 
 class MetadataRenderingBase(BaseBlockView):
@@ -43,7 +43,7 @@ class MetadataRenderingBase(BaseBlockView):
         for found in entries:
             if found["kind"] == "richtext" and found["value"] is not None:
                 self._richtext.append(found["value"])
-                found = dict(found, value=_TOKEN.format(index=len(self._richtext) - 1))
+                found = dict(found, value=_MARKER.format(index=len(self._richtext) - 1))
             yield found
 
     def __call__(self):
@@ -51,5 +51,5 @@ class MetadataRenderingBase(BaseBlockView):
         self._richtext = []
         markup = _INDENT.sub("><", self.index().strip())
         for index, html in enumerate(self._richtext):
-            markup = markup.replace(_TOKEN.format(index=index), html)
+            markup = markup.replace(_MARKER.format(index=index), html)
         return markup

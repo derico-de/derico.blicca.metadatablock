@@ -223,7 +223,9 @@ def _system_rows(context, request):
             "id": name,
             "title": translate(label, context=request),
             "kind": "text",
-            "value": (plone_view.toLocalizedTime(value, long_format=True) or None) if value else None,
+            "value": (plone_view.toLocalizedTime(value, long_format=True) or None)
+            if value
+            else None,
         })
     workflow = getToolByName(context, "portal_workflow", None)
     state = workflow.getInfoFor(context, "review_state", None) if workflow is not None else None
@@ -259,4 +261,3 @@ def content_catalog(context, request):
     if cache is not None:
         cache[key] = result
     return result
-

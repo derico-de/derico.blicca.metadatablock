@@ -1,4 +1,5 @@
 """Testing setup for derico.blicca.metadatablock."""
+
 import os
 
 import plone.app.theming
@@ -27,6 +28,9 @@ class DericoBliccaMetadatablockLayer(PloneSandboxLayer):
     def setUpPloneSite(self, portal):
         """Set up Plone site."""
         self.applyProfile(portal, "derico.blicca.metadatablock:default")
+        # The sandbox site has no workflow chain; the catalog's `review_state`
+        # row and the service's permission tests need one.
+        portal.portal_workflow.setDefaultChain("simple_publication_workflow")
 
 
 FIXTURE = DericoBliccaMetadatablockLayer()

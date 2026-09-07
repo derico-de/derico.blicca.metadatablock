@@ -1,7 +1,7 @@
 <section xmlns:tal="http://xml.zope.org/namespaces/tal"
          xmlns:metal="http://xml.zope.org/namespaces/metal"
          tal:define="title view/title; layout view/layout; entries view/entries"
-         tal:attributes="class view/root_class; aria-label title or None">
+         tal:attributes="class view/root_class; aria-label python: title or None">
   <!--! The Metadata Section block's anatomy: the same markup
         `bundle-src/src/metadata/MetadataSectionView.tsx` emits. See
         `metadata_block_view.pt` for the rules; the list layout repeats the
