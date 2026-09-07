@@ -1,0 +1,15 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:browser="http://namespaces.zope.org/browser"
+    i18n_domain="derico.blicca.metadatablock">
+
+  <browser:page
+      name="aurora-block-metadata"
+      for="*"
+      class=".metadata_block_view.MetadataBlockView"
+      template="metadata_block_view.pt"
+      permission="zope2.View"
+      layer="derico.blicca.metadatablock.interfaces.IDericoBliccaMetadatablockLayer"
+      />
+
+</configure>
