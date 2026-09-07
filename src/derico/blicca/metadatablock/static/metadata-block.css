@@ -1,0 +1,121 @@
+@scope (.aurora-editor, .aurora-editor-portal, .aurora-blocks-view) to (.aurora-pattern-island) {/*
+ * The Metadata blocks' ONE stylesheet. It dresses BOTH surfaces — the React
+ * `view`s and the Chameleon templates — through anatomy-class parity, block
+ * add-on contract §6.1. Packaging wraps this whole file in
+ *
+ *   @scope (.aurora-editor, .aurora-editor-portal, .aurora-blocks-view)
+ *       to (.aurora-pattern-island)
+ *
+ * (build-plugins/scope-wrap.ts).
+ *
+ * ── the rules of the road ───────────────────────────────────────────────
+ *
+ * 1. THE SEAM DECLARES NOTHING. Every `--metadata-*` axis is spelled
+ *    `var(--metadata-x, <literal>)` at its point of use, and this file
+ *    declares no `--metadata-*` property anywhere, so a theme's inherited
+ *    `:root` value wins without escalation.
+ * 2. THE DEFAULTS ARE PUBLISHED. The property table in `README.md` is the
+ *    contract and `test/seam-lockstep.test.ts` holds this file to it.
+ * 3. DESCENT, NOT NAMES. Every rule descends from `.metadata-block` or
+ *    `.metadata-section-block`, the blocks' own roots — never the host's
+ *    `.block-metadata` wrapper stamp. One exception, marked where it
+ *    appears: the editor's `.metadata-notice` chrome.
+ * 4. NEVER SELECT ON `[href]`. The canvas drops every `href` and keeps every
+ *    element, tag and class.
+ * 5. NO `!important`, and no `outline`.
+ *//* ── a field: the single block, and every row of a section list ────────── */.metadata-block {
+  display: flex;
+  flex-direction: column;
+  /* The rhythm between a label and its value. */
+  gap: var(--metadata-flow, 0.25rem);
+  /* `0` ON PURPOSE: the host's background slot already pads the band. */
+  padding: var(--metadata-padding, 0);
+  box-sizing: border-box;
+  /* The Plate editable computes `white-space: pre-wrap` and it inherits into
+   * everything rendered inside it. Parity comes from STATING the value. */
+  white-space: normal;
+}.metadata-block .metadata-label,
+.metadata-section-block .metadata-label {
+  font-size: var(--metadata-label-size, 0.875rem);
+  font-weight: var(--metadata-label-weight, 600);
+  color: var(--metadata-label-color, currentColor);
+}.metadata-block .metadata-value,
+.metadata-section-block .metadata-value {
+  font-size: var(--metadata-value-size, 1rem);
+  overflow-wrap: anywhere;
+}/* A description keeps its line breaks; a title has none to lose. */.metadata-block .metadata-value--text,
+.metadata-section-block .metadata-value--text {
+  white-space: pre-line;
+}.metadata-block .metadata-value--placeholder,
+.metadata-section-block .metadata-value--placeholder {
+  font-style: italic;
+}/* Rich text keeps its own rhythm; only the outer margins are trimmed so the
+ * value sits flush with its label on both surfaces. */.metadata-block .metadata-value--richtext > :first-child,
+.metadata-section-block .metadata-value--richtext > :first-child {
+  margin-top: 0;
+}.metadata-block .metadata-value--richtext > :last-child,
+.metadata-section-block .metadata-value--richtext > :last-child {
+  margin-bottom: 0;
+}/* ── lists: tags and relations ──────────────────────────────────────────── */.metadata-block .metadata-list,
+.metadata-section-block .metadata-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--metadata-list-gap, 0.5rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}.metadata-block .metadata-item,
+.metadata-section-block .metadata-item {
+  margin: 0;
+  padding: 0;
+}/* ── links: relations and files ─────────────────────────────────────────── */.metadata-block .metadata-link,
+.metadata-section-block .metadata-link {
+  color: var(--metadata-link-color, currentColor);
+  text-decoration: var(--metadata-link-decoration, underline);
+}/* ── images ─────────────────────────────────────────────────────────────── */.metadata-block .metadata-image,
+.metadata-section-block .metadata-image {
+  display: block;
+  max-width: var(--metadata-image-width, 100%);
+  height: auto;
+}/* ── the section ────────────────────────────────────────────────────────── */.metadata-section-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--metadata-gap, 0.75rem);
+  padding: var(--metadata-padding, 0);
+  box-sizing: border-box;
+  white-space: normal;
+}/* Zeroing the margin is a PARITY statement: Barceloneta gives `h2` its own
+ * margins and Aurora's preflight zeroes them; `--metadata-gap` is the handle
+ * that gives the rhythm back. */.metadata-section-block .metadata-section-title {
+  margin: 0;
+  font-size: var(--metadata-title-size, 1.25rem);
+}.metadata-section-block .metadata-section-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--metadata-gap, 0.75rem);
+}.metadata-section-block .metadata-section-table {
+  border-collapse: collapse;
+  width: 100%;
+}.metadata-section-block .metadata-section-row > th,
+.metadata-section-block .metadata-section-row > td {
+  padding: var(--metadata-cell-padding, 0.5rem 0.75rem);
+  border-bottom: var(--metadata-table-border, 1px solid currentColor);
+  text-align: start;
+  vertical-align: top;
+}.metadata-section-block .metadata-section-row > th {
+  width: var(--metadata-table-label-width, 30%);
+}/* ── the editor's own chrome ────────────────────────────────────────────
+ *
+ * EXCEPTION TO DESCENT (rule 3): rendered OUTSIDE the block root, reachable
+ * from the scope root instead. Dressed with LITERALS ONLY — never a
+ * `--metadata-*` — because it is the editor talking to the author, not part
+ * of the blocks' published surface.
+ */.metadata-notice {
+  margin-block: 0.5rem 0;
+  padding-inline-start: 0.5rem;
+  border-inline-start: 2px solid;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: GrayText;
+}
+}

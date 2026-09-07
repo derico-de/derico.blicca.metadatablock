@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": [
+      "node",
+      "vitest/globals"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@plone/theming": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/plate": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/blocks": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/layout": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/cmsui": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/components/quanta": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/cmsui/components/ImageWidget/ImageWidget": [
+        "./test/aurora-packages.d.ts"
+      ],
+      "@plone/cmsui/components/ObjectBrowserWidget/ObjectBrowserWidget": [
+        "./test/aurora-packages.d.ts"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "test",
+    "build-plugins",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
+}
