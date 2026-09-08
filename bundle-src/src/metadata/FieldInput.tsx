@@ -18,7 +18,7 @@
 import { useLayoutEffect, useRef, type SyntheticEvent } from 'react';
 
 import type { Entry } from './data';
-import { useFieldBinding } from './form-fields';
+import { useControlValue } from './form-fields';
 
 export type FieldInputProps = {
   entry: Entry;
@@ -29,11 +29,11 @@ export type FieldInputProps = {
 const stop = (event: SyntheticEvent) => event.stopPropagation();
 
 export function FieldInput({ entry, placeholder }: FieldInputProps) {
-  const [bound, setValue] = useFieldBinding(entry.id);
-  // Under a host the atom holds every field of the content; where it holds
-  // no string for this one (a bare registry, a test) the loaded value shows,
-  // so the control never contradicts the preview it stands in for.
-  const value = bound ?? (typeof entry.value === 'string' ? entry.value : '');
+  const [bound, setValue] = useControlValue(entry);
+  // A text field's display value IS its raw value, so a row that carries
+  // no `raw` (a fixture, a hand-authored catalog) still shows what it shows.
+  const value =
+    typeof bound === 'string' ? bound : bound == null && typeof entry.value === 'string' ? entry.value : '';
   const ref = useRef<HTMLTextAreaElement>(null);
   const line = entry.input === 'line';
 

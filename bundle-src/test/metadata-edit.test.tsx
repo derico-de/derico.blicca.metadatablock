@@ -70,7 +70,7 @@ describe('the Metadata block with the server’s catalog on the node', () => {
 
   it('invites typing into an empty editable field, and says what the page shows meanwhile', () => {
     const { container } = render(<MetadataEdit data={{ field: 'description', catalog: CATALOG }} />);
-    expect(screen.getByText(/type to fill it\. Until then the page renders the block empty/)).toBeTruthy();
+    expect(screen.getByText(/fill it in\. Until then the page renders the block empty/)).toBeTruthy();
     expect(container.querySelector('textarea')).toBeTruthy();
     expect(container.querySelector('.metadata-value--placeholder')).toBeNull();
     cleanup();
@@ -126,7 +126,7 @@ describe('inline editing', () => {
     expect(control.tagName).toBe('TEXTAREA');
     expect(control.value).toBe('From the atom');
     expect(control.closest('.metadata-value--text')).toBeTruthy();
-    expect(screen.getByText('“Summary” is typed here and saved with the page.')).toBeTruthy();
+    expect(screen.getByText('“Summary” is edited here and saved with the page.')).toBeTruthy();
 
     fireEvent.change(control, { target: { value: 'Typed in the canvas\nsecond line' } });
     expect((store.get(formAtom) as any).description).toBe('Typed in the canvas\nsecond line');
@@ -185,7 +185,7 @@ describe('inline editing', () => {
     expect(container.querySelector('tr.has--field--title textarea')).toBeTruthy();
     expect(container.querySelector('tr.has--field--modified textarea')).toBeNull();
     expect(screen.getByText('Empty here, so not shown on the page: Summary.')).toBeTruthy();
-    expect(screen.getByText(/typed here and saved with the page/)).toBeTruthy();
+    expect(screen.getByText(/edited here and saved with the page/)).toBeTruthy();
 
     fireEvent.change(cell.querySelector('textarea')!, { target: { value: 'Filled in the table' } });
     expect((store.get(formAtom) as any).description).toBe('Filled in the table');

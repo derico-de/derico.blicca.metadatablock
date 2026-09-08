@@ -104,14 +104,19 @@
   vertical-align: top;
 }.metadata-section-block .metadata-section-row > th {
   width: var(--metadata-table-label-width, 30%);
-}/* ── the canvas's inline control ────────────────────────────────────────
+}/* ── the canvas's inline controls ───────────────────────────────────────
  *
- * Drawn by the editor only, INSIDE the text value element, for a field the
- * server marked editable (ADR 0002); the published page never carries it.
- * It inherits the value's type so the author types into what the visitor
- * will read, and grows with its text. No outline of its own (rule 5): the
- * host's `:focus-visible` style reaches it.
- */.metadata-block .metadata-input,
+ * Drawn by the editor only, INSIDE the value element, for a field the
+ * server marked editable (ADR 0002); the published page never carries
+ * them. A text control inherits the value's type so the author types into
+ * what the visitor will read, and grows with its text; the others are
+ * native elements at the value's size. No outline of their own (rule 5):
+ * the host's `:focus-visible` style reaches them.
+ */.metadata-block .metadata-control,
+.metadata-section-block .metadata-control {
+  display: block;
+  font-size: var(--metadata-value-size, 1rem);
+}.metadata-block .metadata-input,
 .metadata-section-block .metadata-input {
   display: block;
   width: 100%;
@@ -130,10 +135,68 @@
   resize: none;
   field-sizing: content;
 }.metadata-block .metadata-input::placeholder,
-.metadata-section-block .metadata-input::placeholder {
+.metadata-section-block .metadata-input::placeholder,
+.metadata-block .metadata-token-entry::placeholder,
+.metadata-section-block .metadata-token-entry::placeholder {
   color: GrayText;
   font-style: italic;
   opacity: 1;
+}/* A select, a number, a native date: a hairline under the value. */.metadata-block select.metadata-input,
+.metadata-section-block select.metadata-input,
+.metadata-block input.metadata-input,
+.metadata-section-block input.metadata-input {
+  width: auto;
+  max-width: 100%;
+  border-bottom: 1px solid currentColor;
+  field-sizing: content;
+}.metadata-block .metadata-input--boolean,
+.metadata-section-block .metadata-input--boolean {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: auto;
+  cursor: pointer;
+}/* Tokens and relations: chips in the value's own list rhythm, an entry after. */.metadata-block .metadata-input--tokens,
+.metadata-section-block .metadata-input--tokens,
+.metadata-block .metadata-input--relations,
+.metadata-section-block .metadata-input--relations,
+.metadata-block .metadata-input--file,
+.metadata-section-block .metadata-input--file {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--metadata-list-gap, 0.5rem);
+}.metadata-block .metadata-token,
+.metadata-section-block .metadata-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}.metadata-block .metadata-token-remove,
+.metadata-section-block .metadata-token-remove {
+  margin: 0;
+  padding: 0 0.25rem;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  line-height: 1;
+}.metadata-block .metadata-token-entry,
+.metadata-section-block .metadata-token-entry {
+  flex: 1 1 8rem;
+  min-width: 8rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid currentColor;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+}.metadata-block .metadata-control-note,
+.metadata-section-block .metadata-control-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: GrayText;
 }/* ── the editor's own chrome ────────────────────────────────────────────
  *
  * EXCEPTION TO DESCENT (rule 3): rendered OUTSIDE the block root, reachable

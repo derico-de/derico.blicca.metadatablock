@@ -5,7 +5,8 @@
  * nothing about them. An empty field the author may type into is kept on
  * the canvas (with its control) and still named as skipped.
  */
-import { fieldSpecs, rowFor, sectionEntries, type MetadataSectionData } from './data';
+import { entry as entryOf, fieldSpecs, rowFor, sectionEntries, type MetadataSectionData } from './data';
+import { hasContent } from './form-fields';
 import MetadataSectionView from './MetadataSectionView';
 import { catalogNotices, EDIT_HINT, INLINE_HINT, renderInput, usePreviewCatalog } from './preview';
 
@@ -26,7 +27,10 @@ export function MetadataSectionEdit(props: MetadataSectionEditProps) {
       notes.push('No fields selected. Add fields in the sidebar.');
     } else if (rows) {
       const skipped = specs
-        .filter((spec) => sectionEntries({ ...preview, fields: [spec] }).length === 0)
+        .filter((spec) => {
+          const row = rowFor(preview, spec.field);
+          return !row || !hasContent(entryOf(row, spec.showLabel));
+        })
         .map((spec) => rowFor(preview, spec.field)?.title || spec.field);
       if (skipped.length) {
         notes.push(`Empty here, so not shown on the page: ${skipped.join(', ')}.`);

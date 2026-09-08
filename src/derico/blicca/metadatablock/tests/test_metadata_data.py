@@ -137,9 +137,23 @@ class TestCatalog:
                 {"id": "description", "kind": "text", "input": "text"},
                 {"id": "text", "kind": "richtext", "input": "plate"},
                 {"id": "effective", "kind": "text", "input": None},
+                {"id": "subjects", "kind": "list", "input": "tokens"},
             ]
         })
-        assert [row["input"] for row in rows] == ["line", "text", "", ""]
+        assert [row["input"] for row in rows] == ["line", "text", "", "", "tokens"]
+
+    def test_an_editable_row_keeps_raw_and_schema_and_a_shown_one_neither(self):
+        rows = metadata_data.catalog({
+            "catalog": [
+                {"id": "subjects", "kind": "list", "input": "tokens", "raw": ["a"], "schema": {"choices": [["a", "A"]]}},
+                {"id": "language", "kind": "text", "input": "select", "raw": {"token": "de"}, "schema": "junk"},
+                {"id": "modified", "kind": "text", "raw": "x", "schema": {"type": "string"}},
+            ]
+        })
+        assert rows[0]["raw"] == ["a"]
+        assert rows[0]["schema"] == {"choices": [["a", "A"]]}
+        assert rows[1]["schema"] == {}
+        assert "raw" not in rows[2] and "schema" not in rows[2]
 
     def test_row_for(self):
         data = {"catalog": [{"id": "title", "title": "T", "kind": "text", "value": "A"}]}

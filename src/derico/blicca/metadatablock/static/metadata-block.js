@@ -1,8 +1,8 @@
 import { jsxs, jsx, Fragment } from "react/jsx-runtime";
-import { useState, useEffect, useRef, useLayoutEffect, createElement, useId } from "react";
-import config from "@plone/registry";
 import { atom, useAtomValue } from "jotai";
 import { useFieldFocusedAtom, getStyleFieldDefinitionsFromRegistry } from "@plone/helpers";
+import config from "@plone/registry";
+import { useState, useEffect, useRef, useLayoutEffect, useId, createElement } from "react";
 const base = {
   viewBox: "0 0 24 24",
   fill: "none",
@@ -30,7 +30,18 @@ function MetadataSectionIcon(props) {
   ] });
 }
 const KINDS = ["text", "richtext", "list", "links", "image", "file"];
-const INPUTS = ["line", "text"];
+const INPUTS = [
+  "line",
+  "text",
+  "number",
+  "boolean",
+  "select",
+  "tokens",
+  "datetime",
+  "date",
+  "relations",
+  "file"
+];
 const LAYOUTS = [
   ["list", "List"],
   ["table", "Table"]
@@ -53,24 +64,29 @@ function fieldSlug(fieldId) {
   const slug = text(fieldId);
   return slug && SLUG.test(slug) ? slug : "";
 }
-const isRecord = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+const isRecord$1 = (value) => !!value && typeof value === "object" && !Array.isArray(value);
 function catalog(data) {
   const value = data.catalog;
   if (!Array.isArray(value)) return null;
   const rows = [];
   for (const raw of value) {
-    if (!isRecord(raw)) continue;
+    if (!isRecord$1(raw)) continue;
     const id = fieldSlug(raw.id);
     const kind = text(raw.kind);
     if (!id || !KINDS.includes(kind)) continue;
     const control = text(raw.input);
-    rows.push({
+    const row = {
       id,
       title: text(raw.title),
       kind,
       value: raw.value,
       input: INPUTS.includes(control) ? control : ""
-    });
+    };
+    if (row.input) {
+      row.raw = raw.raw;
+      row.schema = isRecord$1(raw.schema) ? raw.schema : {};
+    }
+    rows.push(row);
   }
   return rows;
 }
@@ -80,7 +96,7 @@ function rowFor(data, fieldId) {
   return (catalog(data) ?? []).find((row) => row.id === wanted) ?? null;
 }
 function link(value) {
-  if (!isRecord(value)) return null;
+  if (!isRecord$1(value)) return null;
   const href = screenLink(value.href);
   const title = text(value.title);
   return href && title ? { href, title } : null;
@@ -96,7 +112,7 @@ function resolveValue(kind, value) {
     return links.length ? links : null;
   }
   if (kind === "image") {
-    if (!isRecord(value)) return null;
+    if (!isRecord$1(value)) return null;
     const src = screenLink(value.src);
     return src ? { src, alt: text(value.alt) } : null;
   }
@@ -111,7 +127,8 @@ function entry(row, showLabel2) {
     value: resolveValue(row.kind, row.value),
     label: showLabel2 && row.title ? row.title : "",
     css: `metadata-block has--field--${row.id} has--kind--${row.kind}`,
-    input: row.input
+    input: row.input,
+    ...row.input ? { raw: row.raw, schema: row.schema } : {}
   };
 }
 function storedField(data) {
@@ -154,7 +171,7 @@ function fieldSpecs(data) {
   if (!Array.isArray(value)) return [];
   const specs = [];
   for (const spec of value) {
-    if (!isRecord(spec)) continue;
+    if (!isRecord$1(spec)) continue;
     const field = text(spec.field);
     if (field) specs.push({ field, showLabel: spec.showLabel === true });
   }
@@ -170,9 +187,50 @@ function sectionEntries(data, keepEmpty) {
   }
   return found;
 }
+const fallbackFormAtom = atom({});
+function formAtom() {
+  const registry = config;
+  try {
+    const method = registry.getUtility?.({ name: "formAtom", type: "atom" })?.method;
+    const found = typeof method === "function" ? method() : null;
+    return found ?? fallbackFormAtom;
+  } catch {
+    return fallbackFormAtom;
+  }
+}
+function isBound(row) {
+  return row.kind === "text" && (row.input === "line" || row.input === "text" || row.id === "title");
+}
+function useLiveRows(rows) {
+  const content = useAtomValue(formAtom());
+  if (!rows) return null;
+  return rows.map((row) => {
+    const live = content && typeof content === "object" ? content[row.id] : void 0;
+    if (live === void 0) return row;
+    const next = row.input ? { ...row, raw: live } : row;
+    return isBound(row) && typeof live === "string" ? { ...next, value: live } : next;
+  });
+}
+function hasContent(entry2) {
+  if (!entry2.input || entry2.raw === void 0) return entry2.value !== null;
+  const raw = entry2.raw;
+  if (raw == null || raw === "" || raw === false) return raw === false;
+  if (typeof raw === "string") return raw.trim() !== "";
+  if (Array.isArray(raw)) return raw.length > 0;
+  if (typeof raw === "object") return Object.keys(raw).length > 0;
+  return true;
+}
+function useFieldBinding(fieldId) {
+  const [value, setValue] = useFieldFocusedAtom(formAtom(), fieldId);
+  return [value, setValue];
+}
+function useControlValue(entry2) {
+  const [bound, setValue] = useFieldBinding(entry2.id);
+  return [bound === void 0 ? entry2.raw : bound, setValue];
+}
 function MetadataValue({ entry: entry2, tag, isEditMode, input }) {
   const Tag = tag;
-  if (input) return /* @__PURE__ */ jsx(Tag, { className: "metadata-value metadata-value--text", children: input });
+  if (input) return /* @__PURE__ */ jsx(Tag, { className: `metadata-value metadata-value--${entry2.kind || "text"}`, children: input });
   if (entry2.value === null || !entry2.kind) return null;
   const className = `metadata-value metadata-value--${entry2.kind}`;
   const href = (target) => isEditMode ? {} : { href: target };
@@ -259,37 +317,10 @@ function useCatalog(data) {
   if (!fetched || fetched.url !== endpoint) return { catalog: null, state: "loading" };
   return fetched.catalog ? { catalog: fetched.catalog, state: "fetched" } : { catalog: null, state: "failed" };
 }
-const fallbackFormAtom = atom({});
-function formAtom() {
-  const registry = config;
-  try {
-    const method = registry.getUtility?.({ name: "formAtom", type: "atom" })?.method;
-    const found = typeof method === "function" ? method() : null;
-    return found ?? fallbackFormAtom;
-  } catch {
-    return fallbackFormAtom;
-  }
-}
-function isBound(row) {
-  return row.kind === "text" && (!!row.input || row.id === "title");
-}
-function useLiveRows(rows) {
-  const content = useAtomValue(formAtom());
-  if (!rows) return null;
-  return rows.map((row) => {
-    if (!isBound(row)) return row;
-    const live = content && typeof content === "object" ? content[row.id] : void 0;
-    return typeof live === "string" ? { ...row, value: live } : row;
-  });
-}
-function useFieldBinding(fieldId) {
-  const [value, setValue] = useFieldFocusedAtom(formAtom(), fieldId);
-  return [typeof value === "string" ? value : null, setValue];
-}
-const stop = (event) => event.stopPropagation();
+const stop$1 = (event) => event.stopPropagation();
 function FieldInput({ entry: entry2, placeholder: placeholder2 }) {
-  const [bound, setValue] = useFieldBinding(entry2.id);
-  const value = bound ?? (typeof entry2.value === "string" ? entry2.value : "");
+  const [bound, setValue] = useControlValue(entry2);
+  const value = typeof bound === "string" ? bound : bound == null && typeof entry2.value === "string" ? entry2.value : "";
   const ref = useRef(null);
   const line = entry2.input === "line";
   useLayoutEffect(() => {
@@ -315,12 +346,292 @@ function FieldInput({ entry: entry2, placeholder: placeholder2 }) {
         event.stopPropagation();
         if (line && event.key === "Enter") event.preventDefault();
       },
+      onKeyUp: stop$1,
+      onBeforeInput: stop$1,
+      onPaste: stop$1,
+      onCopy: stop$1,
+      onCut: stop$1,
+      onDrop: stop$1
+    }
+  );
+}
+const stop = (event) => event.stopPropagation();
+function hostWidget(name) {
+  const registry = config;
+  try {
+    return registry.getWidget?.(name) ?? null;
+  } catch {
+    return null;
+  }
+}
+const isRecord = (value) => !!value && typeof value === "object" && !Array.isArray(value);
+const tokenOf = (value) => isRecord(value) ? String(value.token ?? "") : typeof value === "string" ? value : "";
+const choicesOf = (schema) => Array.isArray(schema?.choices) ? schema.choices.filter((pair) => Array.isArray(pair) && pair.length >= 2).map(([token, title]) => [String(token), String(title)]) : [];
+function NumberControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const value = typeof bound === "number" ? String(bound) : typeof bound === "string" ? bound : "";
+  return /* @__PURE__ */ jsx(
+    "input",
+    {
+      type: "number",
+      className: "metadata-input",
+      "aria-label": entry2.title,
+      value,
+      step: "any",
+      onChange: (event) => {
+        const raw = event.target.value;
+        setValue(raw === "" ? null : Number(raw));
+      }
+    }
+  );
+}
+function BooleanControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const id = useId();
+  return /* @__PURE__ */ jsxs("label", { htmlFor: id, className: "metadata-input metadata-input--boolean", children: [
+    /* @__PURE__ */ jsx(
+      "input",
+      {
+        id,
+        type: "checkbox",
+        checked: bound === true,
+        onChange: (event) => setValue(event.target.checked)
+      }
+    ),
+    /* @__PURE__ */ jsx("span", { children: entry2.title })
+  ] });
+}
+function SelectControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const current = tokenOf(bound);
+  const choices = choicesOf(entry2.schema);
+  const known = choices.some(([token]) => token === current);
+  return /* @__PURE__ */ jsxs(
+    "select",
+    {
+      className: "metadata-input",
+      "aria-label": entry2.title,
+      value: current,
+      onChange: (event) => setValue(event.target.value || null),
+      children: [
+        !entry2.schema?.required || !current ? /* @__PURE__ */ jsx("option", { value: "" }) : null,
+        current && !known ? /* @__PURE__ */ jsx("option", { value: current, children: current }) : null,
+        choices.map(([token, title]) => /* @__PURE__ */ jsx("option", { value: token, children: title }, token))
+      ]
+    }
+  );
+}
+function TokensControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const [draft, setDraft] = useState("");
+  const listId = useId();
+  const choices = choicesOf(entry2.schema);
+  const titles = new Map(choices);
+  const open = entry2.schema?.additionalItems !== false;
+  const tokens = (Array.isArray(bound) ? bound : []).map(tokenOf).filter(Boolean);
+  const add = (candidate) => {
+    const token = candidate.trim();
+    if (!token || tokens.includes(token)) return setDraft("");
+    if (!open && !titles.has(token)) return;
+    setValue([...tokens, token]);
+    setDraft("");
+  };
+  const remove = (token) => setValue(tokens.filter((t) => t !== token));
+  return /* @__PURE__ */ jsxs("div", { className: "metadata-input metadata-input--tokens", children: [
+    /* @__PURE__ */ jsx("ul", { className: "metadata-list", children: tokens.map((token) => /* @__PURE__ */ jsxs("li", { className: "metadata-item metadata-token", children: [
+      /* @__PURE__ */ jsx("span", { children: titles.get(token) ?? token }),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          className: "metadata-token-remove",
+          "aria-label": `Remove ${titles.get(token) ?? token}`,
+          onClick: () => remove(token),
+          children: "×"
+        }
+      )
+    ] }, token)) }),
+    /* @__PURE__ */ jsx(
+      "input",
+      {
+        type: "text",
+        className: "metadata-token-entry",
+        "aria-label": entry2.title,
+        placeholder: open ? "Add…" : "Choose…",
+        list: choices.length ? listId : void 0,
+        value: draft,
+        onChange: (event) => setDraft(event.target.value),
+        onBlur: () => draft && add(draft),
+        onKeyDown: (event) => {
+          if (event.key === "Enter" || event.key === ",") {
+            event.preventDefault();
+            add(draft);
+          } else if (event.key === "Backspace" && !draft && tokens.length) {
+            remove(tokens[tokens.length - 1]);
+          }
+        }
+      }
+    ),
+    choices.length ? /* @__PURE__ */ jsx("datalist", { id: listId, children: choices.map(([token, title]) => /* @__PURE__ */ jsx("option", { value: token, children: title }, token)) }) : null
+  ] });
+}
+function localDateTime(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+function DateControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const value = typeof bound === "string" ? bound : null;
+  const dateOnly = entry2.input === "date";
+  return /* @__PURE__ */ jsx(
+    "input",
+    {
+      type: dateOnly ? "date" : "datetime-local",
+      className: "metadata-input",
+      "aria-label": entry2.title,
+      value: value ? dateOnly ? value.slice(0, 10) : localDateTime(value) : "",
+      onChange: (event) => {
+        const raw = event.target.value;
+        if (!raw) return setValue(null);
+        setValue(dateOnly ? raw : new Date(raw).toISOString());
+      }
+    }
+  );
+}
+function RelationsControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const single = entry2.schema?.factory === "Relation Choice" || entry2.schema?.type === "string";
+  const items = (Array.isArray(bound) ? bound : bound ? [bound] : []).filter(isRecord);
+  const Widget = hostWidget("object_browser");
+  const write = (next) => {
+    const rows = next.map((item) => ({ "@id": item["@id"], title: item.title }));
+    setValue(single ? rows[0] ?? null : rows);
+  };
+  return /* @__PURE__ */ jsxs("div", { className: "metadata-input metadata-input--relations", children: [
+    items.length ? /* @__PURE__ */ jsx("ul", { className: "metadata-list", children: items.map((item, index) => /* @__PURE__ */ jsxs("li", { className: "metadata-item metadata-token", children: [
+      /* @__PURE__ */ jsx("span", { children: String(item.title ?? item["@id"] ?? "") }),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          className: "metadata-token-remove",
+          "aria-label": `Remove ${String(item.title ?? item["@id"] ?? "")}`,
+          onClick: () => write(items.filter((_item, i) => i !== index)),
+          children: "×"
+        }
+      )
+    ] }, `${String(item["@id"])}:${index}`)) }) : null,
+    Widget ? /* @__PURE__ */ jsx(
+      Widget,
+      {
+        id: entry2.id,
+        mode: single ? "single" : "multiple",
+        widgetOptions: entry2.schema?.widgetOptions,
+        onChange: (picked) => {
+          const chosen = (Array.isArray(picked) ? picked : picked ? [picked] : []).filter(isRecord);
+          write(single ? chosen.slice(0, 1) : [...items, ...chosen]);
+        }
+      }
+    ) : /* @__PURE__ */ jsx("p", { className: "metadata-control-note", children: "This host has no content picker." })
+  ] });
+}
+function FileControl({ entry: entry2 }) {
+  const [bound, setValue] = useControlValue(entry2);
+  const fileRef = useRef(null);
+  const current = isRecord(bound) ? bound : null;
+  const image = entry2.kind === "image";
+  const name = current ? String(current.filename ?? "") : "";
+  const onPick = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const url = typeof reader.result === "string" ? reader.result : "";
+      setValue({
+        data: url.slice(url.indexOf(",") + 1),
+        encoding: "base64",
+        filename: file.name,
+        "content-type": file.type || "application/octet-stream"
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+  return /* @__PURE__ */ jsxs("div", { className: "metadata-input metadata-input--file", children: [
+    current && name ? /* @__PURE__ */ jsxs("span", { className: "metadata-token", children: [
+      /* @__PURE__ */ jsx("span", { children: name }),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          className: "metadata-token-remove",
+          "aria-label": `Remove ${name}`,
+          onClick: () => {
+            setValue(null);
+            if (fileRef.current) fileRef.current.value = "";
+          },
+          children: "×"
+        }
+      )
+    ] }) : null,
+    /* @__PURE__ */ jsx(
+      "input",
+      {
+        ref: fileRef,
+        type: "file",
+        "aria-label": entry2.title,
+        accept: image ? "image/*" : void 0,
+        onChange: onPick
+      }
+    )
+  ] });
+}
+function FieldControl({ entry: entry2, placeholder: placeholder2 }) {
+  let control = null;
+  switch (entry2.input) {
+    case "line":
+    case "text":
+      control = /* @__PURE__ */ jsx(FieldInput, { entry: entry2, placeholder: placeholder2 });
+      break;
+    case "number":
+      control = /* @__PURE__ */ jsx(NumberControl, { entry: entry2 });
+      break;
+    case "boolean":
+      control = /* @__PURE__ */ jsx(BooleanControl, { entry: entry2 });
+      break;
+    case "select":
+      control = /* @__PURE__ */ jsx(SelectControl, { entry: entry2 });
+      break;
+    case "tokens":
+      control = /* @__PURE__ */ jsx(TokensControl, { entry: entry2 });
+      break;
+    case "datetime":
+    case "date":
+      control = /* @__PURE__ */ jsx(DateControl, { entry: entry2 });
+      break;
+    case "relations":
+      control = /* @__PURE__ */ jsx(RelationsControl, { entry: entry2 });
+      break;
+    case "file":
+      control = /* @__PURE__ */ jsx(FileControl, { entry: entry2 });
+      break;
+    default:
+      return null;
+  }
+  return /* @__PURE__ */ jsx(
+    "div",
+    {
+      className: `metadata-control metadata-control--${entry2.input}`,
+      "data-metadata-control": entry2.input,
+      onKeyDown: stop,
       onKeyUp: stop,
       onBeforeInput: stop,
       onPaste: stop,
       onCopy: stop,
       onCut: stop,
-      onDrop: stop
+      onDrop: stop,
+      children: control
     }
   );
 }
@@ -331,7 +642,7 @@ function usePreviewCatalog(data) {
   return { preview, state, rows };
 }
 function renderInput(entry2, placeholder2 = "") {
-  return entry2.input ? createElement(FieldInput, { entry: entry2, placeholder: placeholder2 }) : null;
+  return entry2.input ? createElement(FieldControl, { entry: entry2, placeholder: placeholder2 }) : null;
 }
 function catalogNotices(state) {
   if (state === "loading") return ["Loading this page’s fields…"];
@@ -341,7 +652,7 @@ function catalogNotices(state) {
   return [];
 }
 const EDIT_HINT = "Previewed as you: the values come from this page. Edit them on the Content tab.";
-const INLINE_HINT = "Previewed as you: text fields are typed here and saved with the page; every other field is edited on the Content tab.";
+const INLINE_HINT = "Previewed as you: fields with a control are edited here and saved with the page; every other field is edited on the Content tab.";
 function MetadataEdit(props) {
   const data = props.data ?? {};
   const { preview, state, rows } = usePreviewCatalog(data);
@@ -355,7 +666,7 @@ function MetadataEdit(props) {
       notes.push(`This page has no field “${field}”, so the block renders empty.`);
     } else if (entry2.input) {
       notes.push(
-        entry2.value === null ? `“${entry2.title}” is empty here — type to fill it. Until then the page ${entry2.placeholder ? "shows the placeholder" : "renders the block empty"}.` : `“${entry2.title}” is typed here and saved with the page.`
+        !hasContent(entry2) ? `“${entry2.title}” is empty here — fill it in. Until then the page ${entry2.placeholder ? "shows the placeholder" : "renders the block empty"}.` : `“${entry2.title}” is edited here and saved with the page.`
       );
     } else if (entry2.value === null) {
       notes.push(
@@ -405,7 +716,10 @@ function MetadataSectionEdit(props) {
     if (!specs.length) {
       notes.push("No fields selected. Add fields in the sidebar.");
     } else if (rows) {
-      const skipped = specs.filter((spec) => sectionEntries({ ...preview, fields: [spec] }).length === 0).map((spec) => rowFor(preview, spec.field)?.title || spec.field);
+      const skipped = specs.filter((spec) => {
+        const row = rowFor(preview, spec.field);
+        return !row || !hasContent(entry(row, spec.showLabel));
+      }).map((spec) => rowFor(preview, spec.field)?.title || spec.field);
       if (skipped.length) {
         notes.push(`Empty here, so not shown on the page: ${skipped.join(", ")}.`);
       }

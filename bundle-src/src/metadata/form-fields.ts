@@ -38,11 +38,17 @@ export function formAtom(): PrimitiveAtom<Content> {
   }
 }
 
-/** Whether the canvas keeps `row` live from the form atom rather than the loaded catalog. */
+/**
+ * Whether the canvas previews `row`'s VALUE from the form atom rather than
+ * the loaded catalog. Only a text line or text can be: its raw value IS its
+ * display value. Every other control shows the atom's value itself (a date
+ * picker shows the date, a token control the tags), so the display value
+ * never needs deriving in the browser — the server's rule (ADR 0001).
+ * The title is bound even where this user may not type it here: the title
+ * node above edits it, and the preview must never contradict it.
+ */
 export function isBound(row: Row): boolean {
-  // The title is bound even where this user may not type it here: the
-  // title node above edits it, and the preview must never contradict it.
-  return row.kind === 'text' && (!!row.input || row.id === 'title');
+  return row.kind === 'text' && (row.input === 'line' || row.input === 'text' || row.id === 'title');
 }
 
 /**
@@ -55,14 +61,47 @@ export function useLiveRows(rows: Row[] | null): Row[] | null {
   const content = useAtomValue(formAtom());
   if (!rows) return null;
   return rows.map((row) => {
-    if (!isBound(row)) return row;
     const live = content && typeof content === 'object' ? content[row.id] : undefined;
-    return typeof live === 'string' ? { ...row, value: live } : row;
+    if (live === undefined) return row;
+    // Every editable row's RAW follows the atom, so the canvas knows what
+    // the author has filled in (`hasContent`); only a text row's display
+    // value does, see `isBound`.
+    const next = row.input ? { ...row, raw: live } : row;
+    return isBound(row) && typeof live === 'string' ? { ...next, value: live } : next;
   });
 }
 
-/** `[value, setValue]` for one field of the form atom; `null` while it holds no string. */
-export function useFieldBinding(fieldId: string): [string | null, (value: string) => void] {
+/**
+ * Whether an editable field holds something, as the author has it NOW —
+ * the atom's raw value for a control, the display value otherwise. What
+ * the canvas's "empty here" notices are about.
+ */
+export function hasContent(entry: { input: string; value: unknown; raw?: unknown }): boolean {
+  if (!entry.input || entry.raw === undefined) return entry.value !== null;
+  const raw = entry.raw;
+  if (raw == null || raw === '' || raw === false) return raw === false;
+  if (typeof raw === 'string') return raw.trim() !== '';
+  if (Array.isArray(raw)) return raw.length > 0;
+  if (typeof raw === 'object') return Object.keys(raw as object).length > 0;
+  return true;
+}
+
+/**
+ * `[value, setValue]` for one field of the form atom. `undefined` while the
+ * atom does not hold the field at all (a bare registry, a test); `null` is
+ * a value — restapi's empty date, cleared image.
+ */
+export function useFieldBinding(fieldId: string): [unknown, (value: unknown) => void] {
   const [value, setValue] = useFieldFocusedAtom<Content, string>(formAtom() as never, fieldId as never);
-  return [typeof value === 'string' ? value : null, setValue as (value: string) => void];
+  return [value as unknown, setValue as (value: unknown) => void];
+}
+
+/**
+ * The value a control edits: the atom's, else the row's `raw` — so under a
+ * host the control never contradicts the preview it stands in for, and
+ * without one it still shows what was loaded.
+ */
+export function useControlValue(entry: { id: string; raw?: unknown }): [unknown, (value: unknown) => void] {
+  const [bound, setValue] = useFieldBinding(entry.id);
+  return [bound === undefined ? entry.raw : bound, setValue];
 }

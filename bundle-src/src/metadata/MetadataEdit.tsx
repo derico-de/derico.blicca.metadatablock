@@ -4,15 +4,16 @@
  *
  * Every SETTING is edited in the sidebar. Every VALUE is the content item's
  * own: a field the server marked editable (`input`) gets an inline control
- * bound to the host's form atom, so typing edits the page's field and Save
- * persists it; every other field is shown as the visitor gets it and edited
- * on the classic Content tab. What the canvas adds is HONESTY: the preview
+ * of its kind (`FieldControl`) bound to the host's form atom, so editing it
+ * edits the page's field and Save persists it; every other field is shown
+ * as the visitor gets it and edited on the classic Content tab. What the canvas adds is HONESTY: the preview
  * is drawn from whatever catalog the canvas has (`useCatalog` — the
  * server's, or a fetched one for a never-serialized node), and every state
  * in which the preview is not simply "what the visitor gets" is announced,
  * outside the block root and `contentEditable={false}`.
  */
 import { metadataEntry, storedField, type MetadataData } from './data';
+import { hasContent } from './form-fields';
 import MetadataView from './MetadataView';
 import { catalogNotices, EDIT_HINT, INLINE_HINT, renderInput, usePreviewCatalog } from './preview';
 
@@ -34,11 +35,11 @@ export function MetadataEdit(props: MetadataEditProps) {
       notes.push(`This page has no field “${field}”, so the block renders empty.`);
     } else if (entry.input) {
       notes.push(
-        entry.value === null
-          ? `“${entry.title}” is empty here — type to fill it. Until then the page ${
+        !hasContent(entry)
+          ? `“${entry.title}” is empty here — fill it in. Until then the page ${
               entry.placeholder ? 'shows the placeholder' : 'renders the block empty'
             }.`
-          : `“${entry.title}” is typed here and saved with the page.`,
+          : `“${entry.title}” is edited here and saved with the page.`,
       );
     } else if (entry.value === null) {
       notes.push(

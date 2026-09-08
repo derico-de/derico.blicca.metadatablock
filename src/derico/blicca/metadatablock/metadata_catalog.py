@@ -9,9 +9,12 @@ request, and handed to both renderers as data (block add-on contract §5.3):
 a list of ``{id, title, kind, value, input}`` rows in schema order, ``kind``
 one of the six ``metadata_data.KINDS`` and ``value`` already reduced to that
 kind's shape — or ``None`` when the field is empty, so the sidebar can still
-offer the field — and ``input`` naming the inline control the canvas may
-offer for the field (``metadata_data.INPUTS``), or ``""`` when the field is
-shown but not edited there.
+offer the field — and ``input`` naming the inline control the canvas draws
+for the field (``metadata_data.INPUTS``), or ``""`` when the field is shown
+but not edited there. An editable row also carries ``raw``, the field's
+restapi value as the content PATCH would take it back, and ``schema``, the
+field's ``@types`` property with its vocabulary's terms inlined as
+``choices`` — what the control needs and nothing the public page reads.
 
 Values are read through ``plone.restapi``'s field serializers rather than
 off the object, for the same reason the Actions block computes its rows the
@@ -34,29 +37,30 @@ from plone.autoform.interfaces import READ_PERMISSIONS_KEY
 from plone.autoform.interfaces import WRITE_PERMISSIONS_KEY
 from plone.dexterity.utils import iterSchemata
 from plone.restapi.interfaces import IFieldSerializer
+from plone.restapi.types.interfaces import IJsonSchemaProvider
 from plone.supermodel.utils import mergedTaggedValueDict
 from Products.CMFCore.permissions import ModifyPortalContent
 from Products.CMFCore.utils import getToolByName
 from zope.annotation.interfaces import IAnnotations
 from zope.component import getMultiAdapter
 from zope.component import queryMultiAdapter
+from zope.component import queryUtility
 from zope.i18n import translate
 from zope.i18nmessageid import MessageFactory
 from zope.schema import getFieldsInOrder
-from zope.schema.interfaces import IASCII
+from zope.schema.interfaces import IASCIILine
 from zope.schema.interfaces import IBool
+from zope.schema.interfaces import IChoice
 from zope.schema.interfaces import ICollection
 from zope.schema.interfaces import IDate
 from zope.schema.interfaces import IDatetime
 from zope.schema.interfaces import IDecimal
-from zope.schema.interfaces import IDottedName
 from zope.schema.interfaces import IFloat
-from zope.schema.interfaces import IId
 from zope.schema.interfaces import IInt
-from zope.schema.interfaces import IPassword
 from zope.schema.interfaces import IText
 from zope.schema.interfaces import ITextLine
 from zope.schema.interfaces import IURI
+from zope.schema.interfaces import IVocabularyFactory
 
 
 logger = logging.getLogger(__name__)
@@ -68,6 +72,12 @@ _plone = MessageFactory("plone")
 #: is where these blocks live.
 DENIED_FIELDS = frozenset({"blocks", "blocks_layout", "changeNote", "versioning_enabled"})
 
+#: Fields that are offered to SHOW but never to edit inline, whatever their
+#: type: the short name is the page's URL, and the editor is bound to it —
+#: renaming it from inside the canvas would save to one address and
+#: navigate to another.
+SHOWN_ONLY_FIELDS = frozenset({"id"})
+
 #: The fields every author reaches for first, pulled to the front of the
 #: catalog regardless of which behavior schema they come from.
 LEADING_FIELDS = ("title", "description")
@@ -77,6 +87,11 @@ LEADING_FIELDS = ("title", "description")
 IMAGE_SCALES = ("large", "preview", "teaser", "mini")
 
 _CACHE_KEY = "derico.blicca.metadatablock.catalog"
+
+#: The most terms of a vocabulary inlined into an editable row's ``schema``
+#: as ``choices``. A select or a token control needs its terms in hand; a
+#: vocabulary larger than this is not offered for editing at all.
+MAX_TERMS = 500
 
 
 def _empty(value):
@@ -118,30 +133,139 @@ def _kind_of(field):
     return None
 
 
-#: Text-line and text fields that are NOT plain prose, and so get no inline
-#: control: a URI, a password, an identifier, ASCII-only data. Each provides
-#: ``ITextLine`` or ``IText`` through zope.schema's native-string aliases.
-_NOT_PROSE = (IURI, IPassword, IId, IDottedName, IASCII)
-
-
 def _input_of(field):
-    """The inline control for a ``text``-kind field, or ``None``.
+    """The inline control for a field, or ``""`` when the canvas only shows it.
 
-    ``line`` for a text line (a title), ``text`` for multi-line text (a
-    description): the two shapes the canvas can offer a plain control for
-    without reformatting on the way in. Rich text is Plate's business, and
-    a date, a number, a boolean or a choice is shown formatted and edited on
-    the Content tab. A ``readonly`` field is never offered.
+    One of ``metadata_data.INPUTS``, decided from the field's type the way
+    ``_kind_of`` decides the display kind — most specific interface first.
+    Every field the Volto metadata block edits with its own widget gets a
+    control; rich text is the one exception (Plate's business, and Blicca
+    moves it into the blocks anyway), and a ``readonly`` field is never
+    offered.
     """
-    if getattr(field, "readonly", False):
-        return None
-    if any(iface.providedBy(field) for iface in _NOT_PROSE):
-        return None
-    if ITextLine.providedBy(field):
+    from plone.app.textfield.interfaces import IRichText
+    from plone.namedfile.interfaces import INamedFileField
+    from plone.namedfile.interfaces import INamedImageField
+    from z3c.relationfield.interfaces import IRelationChoice
+    from z3c.relationfield.interfaces import IRelationList
+
+    if getattr(field, "readonly", False) or IRichText.providedBy(field):
+        return ""
+    if INamedImageField.providedBy(field) or INamedFileField.providedBy(field):
+        return "file"
+    if IRelationChoice.providedBy(field) or IRelationList.providedBy(field):
+        return "relations"
+    if ICollection.providedBy(field):
+        return "tokens"
+    if IChoice.providedBy(field):
+        return "select"
+    if IBool.providedBy(field):
+        return "boolean"
+    if any(iface.providedBy(field) for iface in (IInt, IFloat, IDecimal)):
+        return "number"
+    if IDatetime.providedBy(field):
+        return "datetime"
+    if IDate.providedBy(field):
+        return "date"
+    if any(iface.providedBy(field) for iface in (ITextLine, IASCIILine, IURI)):
         return "line"
     if IText.providedBy(field):
         return "text"
+    return ""
+
+
+def _vocabulary_name(schema):
+    """The named vocabulary a ``@types`` property points at, or ``None``.
+
+    Looked for where restapi puts it: on the property, on its ``items``, or
+    in ``widgetOptions`` (the hint an ajax-select widget leaves — the tags
+    field's keywords vocabulary lives there).
+    """
+    holders = (schema, schema.get("items"), schema.get("widgetOptions"))
+    for holder in holders:
+        if not isinstance(holder, dict):
+            continue
+        vocabulary = holder.get("vocabulary")
+        url = vocabulary.get("@id") if isinstance(vocabulary, dict) else vocabulary
+        if isinstance(url, str) and "/@vocabularies/" in url:
+            return url.rsplit("/@vocabularies/", 1)[1]
+        if isinstance(url, str) and url and "/" not in url:
+            return url
     return None
+
+
+def _pairs(choices):
+    """``[[token, title], …]`` with every title a string, the token standing in."""
+    pairs = []
+    for choice in choices:
+        token, title = (list(choice) + [None])[:2]
+        pairs.append([str(token), str(title) if title not in (None, "") else str(token)])
+    return pairs
+
+
+def _terms(name, context, request, by_value=False):
+    """``[[token, title], …]`` of the named vocabulary, or ``None``.
+
+    ``None`` when there is no such vocabulary, it cannot be built here, or
+    it is larger than ``MAX_TERMS``. With ``by_value`` the first item is the
+    term's VALUE rather than its token: what a plain text field stores when
+    a vocabulary merely suggests (the keywords vocabulary tokens are base64,
+    the tag itself is the value).
+    """
+    factory = queryUtility(IVocabularyFactory, name=name)
+    if factory is None:
+        return None
+    try:
+        vocabulary = factory(context)
+        terms = []
+        for term in vocabulary:
+            if len(terms) >= MAX_TERMS:
+                return None
+            key = term.value if by_value else term.token
+            if isinstance(key, bytes):
+                key = key.decode("utf-8", "replace")
+            title = term.title if term.title is not None else key
+            terms.append([str(key), translate(title, context=request)])
+        return terms
+    except Exception:
+        logger.exception("Could not list vocabulary %s", name)
+        return None
+
+
+def _schema_of(field, control, context, request):
+    """The field's ``@types`` property, readied for its control.
+
+    ``select`` and ``tokens`` get their vocabulary's terms inlined as
+    ``choices`` (``[[token, title], …]``, restapi's own spelling for a static
+    vocabulary), and ``additionalItems`` says whether a token control may
+    take a value outside them. ``None`` when a control cannot be drawn —
+    a select with no terms in hand.
+    """
+    try:
+        provider = queryMultiAdapter((field, context, request), IJsonSchemaProvider)
+        schema = dict(provider.get_schema()) if provider is not None else {}
+    except Exception:
+        # A field restapi cannot describe (a vocabulary that does not
+        # exist) cannot be edited by its rules either.
+        logger.exception("Could not describe field %s", field.__name__)
+        return None
+    if control in ("select", "tokens"):
+        value_type = getattr(field, "value_type", None)
+        closed = control == "select" or IChoice.providedBy(value_type)
+        choices = schema.get("choices") or (schema.get("items") or {}).get("choices")
+        if not choices:
+            name = _vocabulary_name(schema)
+            choices = _terms(name, context, request, by_value=not closed) if name else None
+        if choices:
+            schema["choices"] = _pairs(choices)
+        else:
+            schema.pop("choices", None)
+        if control == "select":
+            if not choices:
+                return None
+        else:
+            schema["additionalItems"] = not (closed and bool(choices))
+    return schema
 
 
 def _may_read(schema, field_name, context):
@@ -248,21 +372,32 @@ def _schema_rows(context, request):
             kind = _kind_of(field)
             if kind is None or not _may_read(schema, name, context):
                 continue
+            raw = None
             try:
-                value = _reduce(field, kind, _serialized(field, context, request), context, request)
+                raw = _serialized(field, context, request)
+                value = _reduce(field, kind, raw, context, request)
             except Exception:
                 # One field that will not serialize must not cost the page
                 # every other field: log it and offer the field empty.
                 logger.exception("Could not read field %s on %s", name, context.absolute_url())
                 value = None
-            control = _input_of(field) if kind == "text" else None
-            rows.append({
+            row = {
                 "id": name,
                 "title": translate(field.title, context=request) or name,
                 "kind": kind,
                 "value": value,
-                "input": control if control and _may_write(schema, name, context) else "",
-            })
+                "input": "",
+            }
+            control = _input_of(field) if name not in SHOWN_ONLY_FIELDS else ""
+            if control and _may_write(schema, name, context):
+                try:
+                    field_schema = _schema_of(field, control, context, request)
+                except Exception:
+                    logger.exception("Could not describe field %s on %s", name, context.absolute_url())
+                    field_schema = None
+                if field_schema is not None:
+                    row.update({"input": control, "raw": raw, "schema": field_schema})
+            rows.append(row)
     return rows
 
 

@@ -27,7 +27,7 @@ describe('the tables', () => {
   it('know six kinds and two layouts', () => {
     expect(KINDS).toEqual(['text', 'richtext', 'list', 'links', 'image', 'file']);
     expect(LAYOUT_IDS).toEqual(['list', 'table']);
-    expect(INPUTS).toEqual(['line', 'text']);
+    expect(INPUTS).toEqual(['line', 'text', 'number', 'boolean', 'select', 'tokens', 'datetime', 'date', 'relations', 'file']);
     expect(LAYOUT_IDS).toContain(DEFAULT_LAYOUT);
   });
 
@@ -96,6 +96,21 @@ describe('catalog', () => {
       ],
     })!;
     expect(rows.map((row) => row.input)).toEqual(['line', 'text', '', '']);
+  });
+
+  it('keeps raw and schema on an editable row and neither on a shown one', () => {
+    const rows = catalog({
+      catalog: [
+        { id: 'subjects', kind: 'list', input: 'tokens', raw: ['a'], schema: { choices: [['a', 'A']] } },
+        { id: 'language', kind: 'text', input: 'select', raw: { token: 'de' }, schema: 'junk' },
+        { id: 'modified', kind: 'text', raw: 'x', schema: { type: 'string' } },
+      ],
+    })!;
+    expect(rows[0].raw).toEqual(['a']);
+    expect(rows[0].schema).toEqual({ choices: [['a', 'A']] });
+    expect(rows[1].schema).toEqual({});
+    expect('raw' in rows[2]).toBe(false);
+    expect('schema' in rows[2]).toBe(false);
   });
 
   it('finds a row by trimmed id', () => {

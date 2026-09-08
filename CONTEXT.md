@@ -15,8 +15,8 @@ the data shape and the editing model are this package's own, see ADR 0001.
 
 **Metadata block**:
 A block that shows ONE [[field]] of the page it sits on, with an optional
-label and an optional placeholder — and, for a plain text field, the place
-that field is typed ([[input]]). It stores the field id, the label flag and
+label and an optional placeholder — and, in the canvas, the place that
+field is edited ([[input]]). It stores the field id, the label flag and
 the placeholder and nothing else; what the field holds is the page's,
 derived on the page. Stored `@type: metadata`.
 _Avoid_: field block (a field is what it shows, not what it is), title block
@@ -76,22 +76,25 @@ being edited, once per page, and previews from that. The sidebar's field
 widgets use the same request. The `view` never fetches.
 
 **Input**:
-The inline control the canvas may draw for a `text`-kind [[field]]: `line`
-for a text line (a title), `text` for multi-line text (a description), or
-none. Decided on the server per row, from the field type — plain prose only,
-never a URI, a password, an identifier, ASCII data or rich text — and from
-what the content PATCH will accept: `Modify portal content` plus the field's
-own write permission (ADR 0002). Carried on the [[catalog]] row as `input`.
-_Avoid_: editable (a flag, where this names a shape), widget.
+The inline control the canvas draws for a [[field]]: `line`, `text`,
+`number`, `boolean`, `select`, `tokens` (tags, multi-choice), `datetime`,
+`date`, `relations` or `file`, or none. Decided on the server per row from
+the field's type — every type the Volto block edits, rich text excepted —
+and from what the content PATCH will accept: `Modify portal content` plus
+the field's own write permission (ADR 0002). Carried on the [[catalog]] row
+as `input`, with `raw` (the restapi value the control edits) and `schema`
+(the `@types` property, terms inlined as `choices`).
+_Avoid_: editable (a flag, where this names a shape), widget (Volto's word).
 
 **Bound field**:
-A field the canvas keeps live from the host's form atom rather than from the
-loaded catalog: every row with an [[input]], and the title always, because
-the title node above the canvas writes into the same atom. Typing into a
-bound field's control writes the atom; every Metadata block on the canvas
-previews from it at once; the Blicca save carries every field of the atom
-the canvas changed (block add-on contract §1.7). Every field that is not
-bound is edited on the Content tab.
+A field a control edits in the host's form atom: every row with an
+[[input]]. Editing writes the atom; every Metadata block on the canvas
+shows it at once — a text control by previewing the atom's string, every
+other control by being the preview; the Blicca save carries every field of
+the atom the canvas changed (block add-on contract §1.7). The title is
+previewed from the atom even without an input, because the title node
+above the canvas writes into the same atom. Every field that is not bound
+is edited on the Content tab.
 _Avoid_: live title (the old name for the title's half of this).
 
 **Theme seam**:

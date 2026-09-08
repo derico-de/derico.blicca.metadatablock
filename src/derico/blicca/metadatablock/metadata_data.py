@@ -36,12 +36,24 @@ import re
 #: PARITY: ``data.ts`` spells the same tuple. Extended together or not at all.
 KINDS = ("text", "richtext", "list", "links", "image", "file")
 
-#: The inline controls the canvas can offer for a ``text``-kind row, named by
-#: the server per field (ADR 0002): ``line`` for a text line, ``text`` for
-#: multi-line text. A row with neither is shown, not edited, in the canvas.
-#: The public renderer never reads it. PARITY: ``data.ts`` spells the same
-#: tuple.
-INPUTS = ("line", "text")
+#: The inline controls the canvas can draw for a row, named by the server per
+#: field from its type (ADR 0002): a text line, multi-line text, a number, a
+#: yes/no, a select over the field's terms, tokens (tags, multi-choice), a
+#: date-time, a date, related items, an uploaded file or image. A row with
+#: none is shown, not edited, in the canvas. The public renderer never reads
+#: it. PARITY: ``data.ts`` spells the same tuple.
+INPUTS = (
+    "line",
+    "text",
+    "number",
+    "boolean",
+    "select",
+    "tokens",
+    "datetime",
+    "date",
+    "relations",
+    "file",
+)
 
 #: The section block's two layouts, in sidebar order, with their labels.
 #: PARITY with ``data.ts``.
@@ -111,7 +123,8 @@ def catalog(data):
     block, an API-authored one, a test fixture — and for a node whose
     derivation failed. A row must carry a slug ``id``, a string ``title`` and
     a ``kind`` the renderers know; anything else is not a row. ``input`` is
-    one of ``INPUTS`` or ``""``.
+    one of ``INPUTS`` or ``""``; a row with one also carries ``raw`` (the
+    field's restapi value, as given) and ``schema`` (a dict, else ``{}``).
     """
     value = (data or {}).get("catalog")
     if not isinstance(value, list):
@@ -125,13 +138,18 @@ def catalog(data):
         if not field_id or kind not in KINDS:
             continue
         control = text(row.get("input"))
-        rows.append({
+        found = {
             "id": field_id,
             "title": text(row.get("title")),
             "kind": kind,
             "value": row.get("value"),
             "input": control if control in INPUTS else "",
-        })
+        }
+        if found["input"]:
+            schema = row.get("schema")
+            found["raw"] = row.get("raw")
+            found["schema"] = schema if isinstance(schema, dict) else {}
+        rows.append(found)
     return rows
 
 

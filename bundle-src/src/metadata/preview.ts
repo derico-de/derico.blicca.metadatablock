@@ -5,7 +5,7 @@
  */
 import { useCatalog, type CatalogState } from './catalog-source';
 import type { Entry, Row } from './data';
-import { FieldInput } from './FieldInput';
+import { FieldControl } from './FieldControl';
 import { useLiveRows } from './form-fields';
 import { createElement, type ReactNode } from 'react';
 
@@ -20,7 +20,7 @@ export function usePreviewCatalog<T extends { catalog?: unknown }>(
 
 /** The inline control for an editable entry, or `null` for one the canvas only shows. */
 export function renderInput(entry: Entry, placeholder = ''): ReactNode {
-  return entry.input ? createElement(FieldInput, { entry, placeholder }) : null;
+  return entry.input ? createElement(FieldControl, { entry, placeholder }) : null;
 }
 
 /** The notices every state of the catalog ladder deserves, before the block's own. */
@@ -36,4 +36,4 @@ export const EDIT_HINT =
   'Previewed as you: the values come from this page. Edit them on the Content tab.';
 
 export const INLINE_HINT =
-  'Previewed as you: text fields are typed here and saved with the page; every other field is edited on the Content tab.';
+  'Previewed as you: fields with a control are edited here and saved with the page; every other field is edited on the Content tab.';

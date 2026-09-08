@@ -7,10 +7,11 @@
  * HTML the server already ran through the field's output transform;
  * `dangerouslySetInnerHTML` is what a Chameleon `structure` is.
  *
- * `input` is the canvas's inline control for a text field (ADR 0002). When
- * the editor hands one over it sits INSIDE the text value element, which is
- * then emitted even for an empty value so there is something to type into.
- * The `view` never passes one, and the template has no twin for it.
+ * `input` is the canvas's inline control for an editable field (ADR 0002).
+ * When the editor hands one over it sits INSIDE the value element of the
+ * entry's kind, which is then emitted even for an empty value so there is
+ * something to edit. The `view` never passes one, and the template has no
+ * twin for it.
  */
 import type { ReactNode } from 'react';
 
@@ -27,7 +28,7 @@ export type MetadataValueProps = {
 
 export function MetadataValue({ entry, tag, isEditMode, input }: MetadataValueProps) {
   const Tag = tag;
-  if (input) return <Tag className="metadata-value metadata-value--text">{input}</Tag>;
+  if (input) return <Tag className={`metadata-value metadata-value--${entry.kind || 'text'}`}>{input}</Tag>;
   if (entry.value === null || !entry.kind) return null;
   const className = `metadata-value metadata-value--${entry.kind}`;
   const href = (target: string) => (isEditMode ? {} : { href: target });

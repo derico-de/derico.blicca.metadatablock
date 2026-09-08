@@ -20,9 +20,11 @@ from plone.app.testing import TEST_USER_NAME
 from plone.app.textfield.value import RichTextValue
 from plone.namedfile.file import NamedBlobFile
 from plone.namedfile.file import NamedBlobImage
+from Products.CMFCore.indexing import processQueue
 from z3c.relationfield import RelationValue
 from zope.annotation.interfaces import IAnnotations
 from zope.component import getUtility
+from zope.component.hooks import setSite
 from zope.intid.interfaces import IIntIds
 
 from derico.blicca.metadatablock import metadata_data
@@ -56,6 +58,12 @@ class CatalogTestCase:
             description="A short summary.\nSecond line.",
         )
         self.doc.setSubject(("Plone", "Aurora"))
+        # The keywords vocabulary reads the Subject index of the catalog of
+        # the CURRENT site directly — which the layer does not set for us —
+        # and reindexing only queues until the next query or commit.
+        self.doc.reindexObject(idxs=["Subject"])
+        processQueue()
+        setSite(self.portal)
         self.doc.text = RichTextValue(
             "<p>Hello <b>world</b> <i>now</i></p>", "text/html", "text/x-html-safe"
         )
@@ -100,7 +108,10 @@ class TestShape(CatalogTestCase):
 class TestKinds(CatalogTestCase):
     def test_text(self):
         rows = by_id(self.catalog())
-        assert rows["title"] == {
+        assert rows["title"]["input"] == "line"
+        assert rows["title"]["raw"] == "A doc"
+        assert rows["title"]["schema"]["type"] == "string"
+        assert {k: v for k, v in rows["title"].items() if k not in ("raw", "schema")} == {
             "id": "title",
             "title": "Title",
             "kind": "text",
@@ -183,23 +194,127 @@ class TestKinds(CatalogTestCase):
 
 
 class TestInputs(CatalogTestCase):
-    """Which rows the canvas may edit inline, decided here (ADR 0002)."""
+    """Which rows the canvas edits inline, and with what, decided here (ADR 0002)."""
 
-    def test_a_text_line_is_a_line_and_text_is_text(self):
+    def test_every_field_type_volto_edits_gets_its_control(self):
         rows = by_id(self.catalog())
-        assert rows["title"]["input"] == "line"
-        assert rows["description"]["input"] == "text"
+        expected = {
+            "title": "line",
+            "description": "text",
+            "effective": "datetime",
+            "subjects": "tokens",
+            "language": "select",
+            "exclude_from_nav": "boolean",
+            "relatedItems": "relations",
+            "table_of_contents": "boolean",
+        }
+        assert {name: rows[name]["input"] for name in expected} == expected
 
-    def test_every_other_kind_and_shape_is_shown_only(self):
-        rows = by_id(self.catalog())
-        # rich text, a list, a date, a boolean, a choice: formatted, not typed
-        for name in ("text", "subjects", "effective", "exclude_from_nav", "language"):
-            assert rows[name]["input"] == "", name
+    def test_an_image_and_a_file_are_uploads(self):
+        news = api.content.create(container=self.portal, type="News Item", id="news", title="N")
+        assert by_id(self.catalog(news))["image"]["input"] == "file"
+        item = api.content.create(container=self.portal, type="File", id="f", title="F")
+        assert by_id(self.catalog(item))["file"]["input"] == "file"
+
+    def test_a_date_is_a_date_and_a_number_a_number(self):
+        from zope import schema
+        from zope.interface import Interface
+
+        class IProbe(Interface):
+            when = schema.Date(title="When")
+            count = schema.Int(title="Count")
+            ratio = schema.Float(title="Ratio")
+
+        from derico.blicca.metadatablock.metadata_catalog import _input_of
+
+        assert _input_of(IProbe["when"]) == "date"
+        assert _input_of(IProbe["count"]) == "number"
+        assert _input_of(IProbe["ratio"]) == "number"
+
+    def test_rich_text_and_a_readonly_field_are_shown_only(self):
+        from zope import schema
+        from zope.interface import Interface
+
+        class IProbe(Interface):
+            fixed = schema.TextLine(title="Fixed", readonly=True)
+
+        from derico.blicca.metadatablock.metadata_catalog import _input_of
+
+        assert by_id(self.catalog())["text"]["input"] == ""
+        assert _input_of(IProbe["fixed"]) == ""
+
+    def test_the_short_name_is_shown_but_never_edited(self):
+        # An ASCII line by type, so a line — but it is the page's URL.
+        row = by_id(self.catalog())["id"]
+        assert row["value"] == "doc"
+        assert row["input"] == ""
+
+    def test_an_ascii_line_is_a_line(self):
+        from zope import schema
+        from zope.interface import Interface
+
+        from derico.blicca.metadatablock.metadata_catalog import _input_of
+
+        class IProbe(Interface):
+            code = schema.ASCIILine(title="Code")
+
+        assert _input_of(IProbe["code"]) == "line"
 
     def test_system_rows_are_never_edited(self):
         rows = by_id(self.catalog())
         for name in ("created", "modified", "review_state"):
             assert rows[name]["input"] == "", name
+            assert "raw" not in rows[name]
+
+    def test_raw_is_the_restapi_value(self):
+        self.doc.language = "en"
+        rows = by_id(self.catalog())
+        assert rows["subjects"]["raw"] == ["Plone", "Aurora"]
+        assert rows["language"]["raw"] == {"token": "en", "title": "English"}
+        assert rows["exclude_from_nav"]["raw"] is False
+        assert rows["effective"]["raw"] is None
+
+    def test_a_select_carries_its_vocabularys_terms(self):
+        row = by_id(self.catalog())["language"]
+        choices = dict(row["schema"]["choices"])
+        assert choices["en"] == "English"
+        assert all(isinstance(t, str) and t for t in choices.values())
+
+    def test_tags_carry_the_existing_keywords_and_stay_open(self):
+        row = by_id(self.catalog())["subjects"]
+        assert row["schema"]["additionalItems"] is True
+        assert {"Plone", "Aurora"} <= {token for token, _title in row["schema"]["choices"]}
+
+    def test_a_closed_multi_choice_is_tokens_over_its_terms(self):
+        from zope import schema
+        from zope.interface import Interface
+        from zope.schema.vocabulary import SimpleVocabulary
+
+        from derico.blicca.metadatablock.metadata_catalog import _input_of
+        from derico.blicca.metadatablock.metadata_catalog import _schema_of
+
+        class IProbe(Interface):
+            picks = schema.List(
+                title="Picks",
+                value_type=schema.Choice(vocabulary=SimpleVocabulary.fromValues(["a", "b"])),
+            )
+
+        field = IProbe["picks"]
+        assert _input_of(field) == "tokens"
+        described = _schema_of(field, "tokens", self.doc, self.request)
+        assert described["choices"] == [["a", "a"], ["b", "b"]]
+        assert described["additionalItems"] is False
+
+    def test_a_select_over_a_vocabulary_it_cannot_list_is_shown_only(self):
+        from zope import schema
+        from zope.interface import Interface
+
+        from derico.blicca.metadatablock.metadata_catalog import _schema_of
+
+        class IProbe(Interface):
+            pick = schema.Choice(title="Pick", vocabulary="no.such.vocabulary")
+
+        assert _schema_of(IProbe["pick"], "select", self.doc, self.request) is None
 
     def test_the_site_root_title_is_a_line(self):
         assert by_id(self.catalog(self.portal))["title"]["input"] == "line"

@@ -43,14 +43,38 @@ export const KINDS = ['text', 'richtext', 'list', 'links', 'image', 'file'] as c
 export type Kind = (typeof KINDS)[number];
 
 /**
- * The inline controls the canvas can offer for a `text`-kind row, named by
- * the server per field (ADR 0002): `line` for a text line, `text` for
- * multi-line text. A row with neither is shown, not edited, in the canvas;
- * the `view` never reads it. PARITY: `metadata_data.INPUTS`.
+ * The inline controls the canvas can draw for a row, named by the server
+ * per field from its type (ADR 0002): a text line, multi-line text, a
+ * number, a yes/no, a select over the field's terms, tokens (tags,
+ * multi-choice), a date-time, a date, related items, an uploaded file or
+ * image. A row with none is shown, not edited, in the canvas; the `view`
+ * never reads it. PARITY: `metadata_data.INPUTS`.
  */
-export const INPUTS = ['line', 'text'] as const;
+export const INPUTS = [
+  'line',
+  'text',
+  'number',
+  'boolean',
+  'select',
+  'tokens',
+  'datetime',
+  'date',
+  'relations',
+  'file',
+] as const;
 
 export type Input = (typeof INPUTS)[number] | '';
+
+/** What an editable row's `schema` may carry that a control reads. */
+export type FieldSchema = {
+  /** `[[token, title], …]` — the field's terms, inlined by the server. */
+  choices?: Array<[string, string]>;
+  /** Whether a token control may take a value outside `choices`. */
+  additionalItems?: boolean;
+  required?: boolean;
+  widgetOptions?: Record<string, unknown>;
+  [key: string]: unknown;
+};
 
 /** The section block's two layouts, in sidebar order. PARITY with `metadata_data.LAYOUTS`. */
 export const LAYOUTS = [
@@ -86,7 +110,17 @@ export const LINK_SCHEMES = ['http', 'https', 'mailto', 'tel'] as const;
  */
 export const DERIVED_KEYS = ['catalog'] as const;
 
-export type Row = { id: string; title: string; kind: Kind; value: unknown; input: Input };
+export type Row = {
+  id: string;
+  title: string;
+  kind: Kind;
+  value: unknown;
+  input: Input;
+  /** With an `input`: the field's restapi value, as the content PATCH takes it back. */
+  raw?: unknown;
+  /** With an `input`: the field's `@types` property, terms inlined. */
+  schema?: FieldSchema;
+};
 
 export type Link = { href: string; title: string };
 export type Image = { src: string; alt: string };
@@ -101,6 +135,8 @@ export type Entry = {
   css: string;
   /** The inline control the canvas may draw for this field; `''` on the public page's terms. */
   input: Input;
+  raw?: unknown;
+  schema?: FieldSchema;
 };
 
 export type MetadataEntry = Entry & { placeholder: string };
@@ -154,13 +190,18 @@ export function catalog(data: { catalog?: unknown }): Row[] | null {
     const kind = text(raw.kind);
     if (!id || !(KINDS as readonly string[]).includes(kind)) continue;
     const control = text(raw.input);
-    rows.push({
+    const row: Row = {
       id,
       title: text(raw.title),
       kind: kind as Kind,
       value: raw.value,
       input: (INPUTS as readonly string[]).includes(control) ? (control as Input) : '',
-    });
+    };
+    if (row.input) {
+      row.raw = raw.raw;
+      row.schema = isRecord(raw.schema) ? (raw.schema as FieldSchema) : {};
+    }
+    rows.push(row);
   }
   return rows;
 }
@@ -218,6 +259,7 @@ export function entry(row: Row, showLabel: boolean): Entry {
     label: showLabel && row.title ? row.title : '',
     css: `metadata-block has--field--${row.id} has--kind--${row.kind}`,
     input: row.input,
+    ...(row.input ? { raw: row.raw, schema: row.schema } : {}),
   };
 }
 
