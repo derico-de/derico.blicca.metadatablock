@@ -56,7 +56,7 @@
 }.metadata-block .metadata-value--richtext > :last-child,
 .metadata-section-block .metadata-value--richtext > :last-child {
   margin-bottom: 0;
-}/* ── lists: tags and relations ──────────────────────────────────────────── */.metadata-block .metadata-list,
+}/* ── lists: multi-choice, tags and relations ────────────────────────────── */.metadata-block .metadata-list,
 .metadata-section-block .metadata-list {
   display: flex;
   flex-wrap: wrap;
@@ -68,6 +68,21 @@
 .metadata-section-block .metadata-item {
   margin: 0;
   padding: 0;
+}/* ── tags: a pill per keyword, each a search for it ─────────────────────
+ *
+ * The anatomy of Plone's own keywords viewlet, in the blocks' own classes:
+ * an outlined chip, not an underlined link, so a row of tags reads as a set
+ * rather than as a sentence. The pill is the whole of it — the list rhythm
+ * above already wraps and spaces them.
+ */.metadata-block .metadata-tag,
+.metadata-section-block .metadata-tag {
+  display: inline-block;
+  padding: var(--metadata-tag-padding, 0.125rem 0.5rem);
+  border: var(--metadata-tag-border, 1px solid currentColor);
+  border-radius: var(--metadata-tag-radius, 0.25rem);
+  font-size: var(--metadata-tag-size, 0.875rem);
+  color: var(--metadata-tag-color, currentColor);
+  text-decoration: var(--metadata-tag-decoration, none);
 }/* ── links: relations and files ─────────────────────────────────────────── */.metadata-block .metadata-link,
 .metadata-section-block .metadata-link {
   color: var(--metadata-link-color, currentColor);

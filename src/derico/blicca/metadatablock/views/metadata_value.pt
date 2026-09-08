@@ -26,6 +26,10 @@
         <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--list"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value" tal:content="item">Item</li></ul></div></tal:div>
         <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--list"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value" tal:content="item">Item</li></ul></td></tal:td>
       </tal:list>
+      <tal:tags tal:condition="python: entry['kind'] == 'tags'">
+        <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--tags"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value"><a class="metadata-tag" rel="nofollow" tal:attributes="href item/href" tal:content="item/title">Tag</a></li></ul></div></tal:div>
+        <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--tags"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value"><a class="metadata-tag" rel="nofollow" tal:attributes="href item/href" tal:content="item/title">Tag</a></li></ul></td></tal:td>
+      </tal:tags>
       <tal:links tal:condition="python: entry['kind'] == 'links'">
         <tal:div tal:condition="python: tag == 'div'"><div class="metadata-value metadata-value--links"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value"><a class="metadata-link" tal:attributes="href item/href" tal:content="item/title">Item</a></li></ul></div></tal:div>
         <tal:td tal:condition="python: tag == 'td'"><td class="metadata-value metadata-value--links"><ul class="metadata-list"><li class="metadata-item" tal:repeat="item entry/value"><a class="metadata-link" tal:attributes="href item/href" tal:content="item/title">Item</a></li></ul></td></tal:td>

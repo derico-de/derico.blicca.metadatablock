@@ -187,6 +187,16 @@ class TestResolveValue:
         assert metadata_data.resolve_value("links", value) == [{"href": "/a", "title": "A"}]
         assert metadata_data.resolve_value("links", []) is None
 
+    def test_tags_are_screened_exactly_as_links_are(self):
+        value = [
+            {"href": "/@@search?Subject%3Alist=a", "title": "a"},
+            {"href": "javascript:x", "title": "evil"},
+        ]
+        assert metadata_data.resolve_value("tags", value) == [
+            {"href": "/@@search?Subject%3Alist=a", "title": "a"}
+        ]
+        assert metadata_data.resolve_value("tags", []) is None
+
     def test_image_needs_a_screened_src(self):
         assert metadata_data.resolve_value("image", {"src": "/i.jpg"}) == {
             "src": "/i.jpg",

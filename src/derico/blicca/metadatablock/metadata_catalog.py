@@ -7,7 +7,7 @@ looks like depends on the field type; whether the visitor may read it depends
 on the field's read permission. All of that is decided HERE, once per
 request, and handed to both renderers as data (block add-on contract §5.3):
 a list of ``{id, title, kind, value, input}`` rows in schema order, ``kind``
-one of the six ``metadata_data.KINDS`` and ``value`` already reduced to that
+one of the seven ``metadata_data.KINDS`` and ``value`` already reduced to that
 kind's shape — or ``None`` when the field is empty, so the sidebar can still
 offer the field — and ``input`` naming the inline control the canvas draws
 for the field (``metadata_data.INPUTS``), or ``""`` when the field is shown
@@ -31,6 +31,7 @@ and recurse.
 """
 
 import logging
+from urllib.parse import quote
 
 from AccessControl import getSecurityManager
 from plone.autoform.interfaces import READ_PERMISSIONS_KEY
@@ -81,6 +82,12 @@ SHOWN_ONLY_FIELDS = frozenset({"id"})
 #: The fields every author reaches for first, pulled to the front of the
 #: catalog regardless of which behavior schema they come from.
 LEADING_FIELDS = ("title", "description")
+
+#: The fields whose values are TAGS rather than a plain list: a keyword
+#: each, searchable in one index of the site's catalog. Field id → that
+#: index. Such a field renders as tags — every value a link to a search for
+#: it — the way Plone's own keywords viewlet renders ``Subject``.
+TAG_INDEXES = {"subjects": "Subject"}
 
 #: The image scale an ``image`` row points at, and the fallbacks when the
 #: uploaded image is smaller than it.
@@ -321,6 +328,21 @@ def _list_of(value):
     return [item for item in items if item]
 
 
+def _tags_of(name, value, context, request):
+    """Tag strings → ``{href, title}`` rows, one search link per tag.
+
+    The link Plone's own keywords viewlet builds: the navigation root's
+    ``@@search``, the tag as the sole criterion of the field's index.
+    """
+    index = TAG_INDEXES[name]
+    portal_state = getMultiAdapter((context, request), name="plone_portal_state")
+    root = portal_state.navigation_root_url()
+    return [
+        {"href": f"{root}/@@search?{index}%3Alist={quote(title, safe='')}", "title": title}
+        for title in _list_of(value)
+    ]
+
+
 def _links_of(value):
     rows = value if isinstance(value, list) else [value]
     links = []
@@ -352,6 +374,8 @@ def _reduce(field, kind, value, context, request):
         return str(data) if data else None
     if kind == "list":
         return _list_of(value) or None
+    if kind == "tags":
+        return _tags_of(field.__name__, value, context, request) or None
     if kind == "links":
         return _links_of(value) or None
     if kind == "image":
@@ -372,6 +396,8 @@ def _schema_rows(context, request):
             kind = _kind_of(field)
             if kind is None or not _may_read(schema, name, context):
                 continue
+            if kind == "list" and name in TAG_INDEXES:
+                kind = "tags"
             raw = None
             try:
                 raw = _serialized(field, context, request)

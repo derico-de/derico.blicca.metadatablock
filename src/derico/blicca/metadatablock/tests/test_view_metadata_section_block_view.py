@@ -136,7 +136,8 @@ class TestEndToEnd(SectionViewTestCase):
         })
         assert '<th class="metadata-label" scope="row">Title</th>' in markup
         assert '<td class="metadata-value metadata-value--text">A doc</td>' in markup
-        assert '<li class="metadata-item">Plone</li>' in markup
+        assert '<td class="metadata-value metadata-value--tags">' in markup
+        assert ">Plone</a>" in markup
         # `effective` is unset on the document: skipped, not rendered empty.
         assert "has--field--effective" not in markup
 

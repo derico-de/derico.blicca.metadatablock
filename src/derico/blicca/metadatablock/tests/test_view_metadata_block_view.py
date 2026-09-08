@@ -94,7 +94,7 @@ class TestRegistration(MetadataViewTestCase):
 
 class TestAnatomy(MetadataViewTestCase):
     def test_the_fixture_covers_the_states_the_rules_enumerate(self):
-        assert len(METADATA_CASES) >= 21
+        assert len(METADATA_CASES) >= 22
         assert len({case["name"] for case in METADATA_CASES}) == len(METADATA_CASES)
         assert all(case["note"] for case in METADATA_CASES)
 
@@ -156,9 +156,12 @@ class TestEndToEnd(MetadataViewTestCase):
         markup = self._page({"field": "text"})
         assert "<p>Hello <b>world</b> <i>now</i></p>" in markup
 
-    def test_the_documents_tags_render_as_a_list(self):
+    def test_the_documents_tags_render_as_search_links(self):
         markup = self._page({"field": "subjects"})
-        assert '<li class="metadata-item">Plone</li><li class="metadata-item">Aurora</li>' in markup
+        href = f"{self.portal.absolute_url()}/@@search?Subject%3Alist=Plone"
+        assert 'class="metadata-block has--field--subjects has--kind--tags"' in markup
+        assert f'<a class="metadata-tag" rel="nofollow" href="{href}">Plone</a>' in markup
+        assert "Aurora</a>" in markup
 
     def test_a_stored_catalog_is_never_published(self):
         markup = self._page({

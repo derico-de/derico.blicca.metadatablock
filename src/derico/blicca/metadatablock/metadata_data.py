@@ -14,7 +14,7 @@ a request, lives in ``metadata_catalog``.
 What the two sides read is the same thing: the ``catalog`` key the server's
 serializer injects at load time — every field of the content item the block
 sits on, as ``{id, title, kind, value, input}`` rows with the value already
-reduced to one of six display kinds. Neither renderer formats a field value itself; the
+reduced to one of seven display kinds. Neither renderer formats a field value itself; the
 catalog is the server's alone (block add-on contract §5.3), and the canvas
 only ever *fetches* one when it holds a node the server has never serialized.
 """
@@ -24,17 +24,18 @@ import re
 
 #: The display kinds a catalog row's ``value`` can take. The server reduces
 #: every Dexterity field type to one of these at derivation time, so the
-#: renderers know six shapes and no field types:
+#: renderers know seven shapes and no field types:
 #:
 #: - ``text``: one string (titles, descriptions, numbers, dates and booleans
 #:   already formatted for the request's locale, choice titles);
 #: - ``richtext``: one HTML string, the field's own output transform;
-#: - ``list``: strings (tags, multi-choice titles);
+#: - ``list``: strings (multi-choice titles);
+#: - ``tags``: ``{href, title}`` rows, one per keyword, each a search for it;
 #: - ``links``: ``{href, title}`` rows (relations);
 #: - ``image``: ``{src, alt}``;
 #: - ``file``: ``{href, title}``.
 #: PARITY: ``data.ts`` spells the same tuple. Extended together or not at all.
-KINDS = ("text", "richtext", "list", "links", "image", "file")
+KINDS = ("text", "richtext", "list", "tags", "links", "image", "file")
 
 #: The inline controls the canvas can draw for a row, named by the server per
 #: field from its type (ADR 0002): a text line, multi-line text, a number, a
@@ -184,7 +185,7 @@ def resolve_value(kind, value):
         items = [text(item) for item in value] if isinstance(value, list) else []
         items = [item for item in items if item]
         return items or None
-    if kind == "links":
+    if kind in ("tags", "links"):
         links = [_link(item) for item in value] if isinstance(value, list) else []
         links = [link for link in links if link]
         return links or None

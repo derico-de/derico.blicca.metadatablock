@@ -29,7 +29,7 @@ function MetadataSectionIcon(props) {
     /* @__PURE__ */ jsx("path", { d: "M12 18h8" })
   ] });
 }
-const KINDS = ["text", "richtext", "list", "links", "image", "file"];
+const KINDS = ["text", "richtext", "list", "tags", "links", "image", "file"];
 const INPUTS = [
   "line",
   "text",
@@ -107,7 +107,7 @@ function resolveValue(kind, value) {
     const items = (Array.isArray(value) ? value : []).map(text).filter(Boolean);
     return items.length ? items : null;
   }
-  if (kind === "links") {
+  if (kind === "tags" || kind === "links") {
     const links = (Array.isArray(value) ? value : []).map(link).filter((l) => !!l);
     return links.length ? links : null;
   }
@@ -241,6 +241,8 @@ function MetadataValue({ entry: entry2, tag, isEditMode, input }) {
       return /* @__PURE__ */ jsx(Tag, { className, dangerouslySetInnerHTML: { __html: entry2.value } });
     case "list":
       return /* @__PURE__ */ jsx(Tag, { className, children: /* @__PURE__ */ jsx("ul", { className: "metadata-list", children: entry2.value.map((item, index) => /* @__PURE__ */ jsx("li", { className: "metadata-item", children: item }, `${item}:${index}`)) }) });
+    case "tags":
+      return /* @__PURE__ */ jsx(Tag, { className, children: /* @__PURE__ */ jsx("ul", { className: "metadata-list", children: entry2.value.map((item, index) => /* @__PURE__ */ jsx("li", { className: "metadata-item", children: /* @__PURE__ */ jsx("a", { className: "metadata-tag", rel: "nofollow", ...href(item.href), children: item.title }) }, `${item.href}:${index}`)) }) });
     case "links":
       return /* @__PURE__ */ jsx(Tag, { className, children: /* @__PURE__ */ jsx("ul", { className: "metadata-list", children: entry2.value.map((item, index) => /* @__PURE__ */ jsx("li", { className: "metadata-item", children: /* @__PURE__ */ jsx("a", { className: "metadata-link", ...href(item.href), children: item.title }) }, `${item.href}:${index}`)) }) });
     case "image": {

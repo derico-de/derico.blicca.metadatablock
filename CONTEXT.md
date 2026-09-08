@@ -38,9 +38,10 @@ _Avoid_: property, attribute, metadata (the whole, not the one).
 
 **Kind**:
 The display shape a field's value is reduced to: `text`, `richtext`, `list`,
-`links`, `image` or `file`. Decided on the server from the field's type; the
-renderers know six shapes and no field types. Emitted on the root as
-`has--kind--<kind>` once the catalog knows the field.
+`tags`, `links`, `image` or `file`. Decided on the server from the field's
+type — `tags` from its NAME besides, see [[tags]]; the renderers know seven
+shapes and no field types. Emitted on the root as `has--kind--<kind>` once
+the catalog knows the field.
 _Avoid_: widget (Volto's word for the same idea, but a widget edits), type
 (the field's, not the display's).
 
@@ -97,6 +98,15 @@ above the canvas writes into the same atom. Every field that is not bound
 is edited on the Content tab.
 _Avoid_: live title (the old name for the title's half of this).
 
+**Tags**:
+The [[kind]] of a field whose values are keywords the site's catalog
+indexes: `subjects` in the `Subject` index (`metadata_catalog.TAG_INDEXES`
+is the map, and the only place a field is known by name). The server reduces
+such a field to `{href, title}` rows, one search link per keyword — the link
+Plone's own keywords viewlet builds — and both renderers draw them as pills.
+_Avoid_: keywords (the field's word, where this names the display), subjects
+(the field id), categories (the viewlet's `section-category`).
+
 **Theme seam**:
-The fifteen `--metadata-*` custom properties a host theme sets to make the
+The twenty-one `--metadata-*` custom properties a host theme sets to make the
 blocks its own, with defaults at their point of use and declared nowhere.

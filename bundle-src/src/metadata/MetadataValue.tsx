@@ -50,6 +50,20 @@ export function MetadataValue({ entry, tag, isEditMode, input }: MetadataValuePr
           </ul>
         </Tag>
       );
+    case 'tags':
+      return (
+        <Tag className={className}>
+          <ul className="metadata-list">
+            {(entry.value as Link[]).map((item, index) => (
+              <li key={`${item.href}:${index}`} className="metadata-item">
+                <a className="metadata-tag" rel="nofollow" {...href(item.href)}>
+                  {item.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Tag>
+      );
     case 'links':
       return (
         <Tag className={className}>

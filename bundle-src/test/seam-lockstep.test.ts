@@ -80,7 +80,7 @@ const uses = parseVarUses(body).filter((use) => use.name.startsWith(PREFIX));
 
 describe('the seam is what the README says it is', () => {
   it('parses the published table', () => {
-    expect(documented.size).toBe(15);
+    expect(documented.size).toBe(21);
     expect(documented.get('--metadata-gap')).toBe('0.75rem');
     expect(documented.get('--metadata-link-decoration')).toBe('underline');
   });

@@ -115,12 +115,25 @@
     },
     {
       "name": "list",
-      "note": "Strings become list items; empty ones are dropped.",
+      "note": "A multi-choice field: strings become list items; empty ones are dropped.",
+      "data": {
+        "field": "picks",
+        "catalog": [{ "id": "picks", "title": "Picks", "kind": "list", "value": ["Plone", "", "Aurora"] }]
+      },
+      "html": "<div class=\"metadata-block has--field--picks has--kind--list\"><div class=\"metadata-value metadata-value--list\"><ul class=\"metadata-list\"><li class=\"metadata-item\">Plone</li><li class=\"metadata-item\">Aurora</li></ul></div></div>"
+    },
+    {
+      "name": "tags",
+      "note": "Tags are Plone's keywords viewlet in the blocks' own classes: one pill per tag, each the search link the server built for it. A row the scheme screen rejects is dropped, exactly as in a links value.",
       "data": {
         "field": "subjects",
-        "catalog": [{ "id": "subjects", "title": "Tags", "kind": "list", "value": ["Plone", "", "Aurora"] }]
+        "catalog": [{ "id": "subjects", "title": "Tags", "kind": "tags", "value": [
+          { "href": "http://nohost/plone/@@search?Subject%3Alist=Plone", "title": "Plone" },
+          { "href": "javascript:alert(1)", "title": "Bad" },
+          { "href": "http://nohost/plone/@@search?Subject%3Alist=Aurora", "title": "Aurora" }
+        ] }]
       },
-      "html": "<div class=\"metadata-block has--field--subjects has--kind--list\"><div class=\"metadata-value metadata-value--list\"><ul class=\"metadata-list\"><li class=\"metadata-item\">Plone</li><li class=\"metadata-item\">Aurora</li></ul></div></div>"
+      "html": "<div class=\"metadata-block has--field--subjects has--kind--tags\"><div class=\"metadata-value metadata-value--tags\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-tag\" rel=\"nofollow\" href=\"http://nohost/plone/@@search?Subject%3Alist=Plone\">Plone</a></li><li class=\"metadata-item\"><a class=\"metadata-tag\" rel=\"nofollow\" href=\"http://nohost/plone/@@search?Subject%3Alist=Aurora\">Aurora</a></li></ul></div></div>"
     },
     {
       "name": "links",
@@ -275,16 +288,17 @@
     },
     {
       "name": "table-with-links-and-richtext",
-      "note": "Every kind renders inside a table cell the way it renders inside the single block's value div.",
+      "note": "Every kind renders inside a table cell the way it renders inside the single block's value div — tags included.",
       "data": {
         "layout": "table",
-        "fields": [{ "field": "text" }, { "field": "relatedItems" }],
+        "fields": [{ "field": "text" }, { "field": "relatedItems" }, { "field": "subjects" }],
         "catalog": [
           { "id": "text", "title": "Text", "kind": "richtext", "value": "<p>Hi <b>there</b></p>" },
-          { "id": "relatedItems", "title": "Related", "kind": "links", "value": [{ "href": "http://nohost/plone/a", "title": "A" }] }
+          { "id": "relatedItems", "title": "Related", "kind": "links", "value": [{ "href": "http://nohost/plone/a", "title": "A" }] },
+          { "id": "subjects", "title": "Tags", "kind": "tags", "value": [{ "href": "http://nohost/plone/@@search?Subject%3Alist=Plone", "title": "Plone" }] }
         ]
       },
-      "html": "<section class=\"metadata-section-block has--layout--table\"><table class=\"metadata-section-table\"><tbody><tr class=\"metadata-section-row has--field--text has--kind--richtext\"><th class=\"metadata-label\" scope=\"row\">Text</th><td class=\"metadata-value metadata-value--richtext\"><p>Hi <b>there</b></p></td></tr><tr class=\"metadata-section-row has--field--relatedItems has--kind--links\"><th class=\"metadata-label\" scope=\"row\">Related</th><td class=\"metadata-value metadata-value--links\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-link\" href=\"http://nohost/plone/a\">A</a></li></ul></td></tr></tbody></table></section>"
+      "html": "<section class=\"metadata-section-block has--layout--table\"><table class=\"metadata-section-table\"><tbody><tr class=\"metadata-section-row has--field--text has--kind--richtext\"><th class=\"metadata-label\" scope=\"row\">Text</th><td class=\"metadata-value metadata-value--richtext\"><p>Hi <b>there</b></p></td></tr><tr class=\"metadata-section-row has--field--relatedItems has--kind--links\"><th class=\"metadata-label\" scope=\"row\">Related</th><td class=\"metadata-value metadata-value--links\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-link\" href=\"http://nohost/plone/a\">A</a></li></ul></td></tr><tr class=\"metadata-section-row has--field--subjects has--kind--tags\"><th class=\"metadata-label\" scope=\"row\">Tags</th><td class=\"metadata-value metadata-value--tags\"><ul class=\"metadata-list\"><li class=\"metadata-item\"><a class=\"metadata-tag\" rel=\"nofollow\" href=\"http://nohost/plone/@@search?Subject%3Alist=Plone\">Plone</a></li></ul></td></tr></tbody></table></section>"
     },
     {
       "name": "empty-fields-skipped",

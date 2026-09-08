@@ -35,8 +35,8 @@ type the Volto block edits gets a control of its kind in the canvas — rich
 text excepted, which Blicca keeps in the blocks — while a field the user may
 not write is *shown* and edited where Blicca edits every non-block field, on
 the Content tab. And no field is formatted in the browser: the server reduces
-every field to one of six display kinds, so both renderers know six shapes
-and no field types.
+every field to one of seven display kinds, so both renderers know seven
+shapes and no field types.
 
 ## Features
 
@@ -44,10 +44,12 @@ and no field types.
   behaviors that the current user may read, plus created, modified and the
   workflow state. Chosen in the sidebar from a select filled with the page's
   own fields.
-- **Six display kinds.** Text (titles, descriptions, numbers, dates and
+- **Seven display kinds.** Text (titles, descriptions, numbers, dates and
   booleans formatted for the request's locale, choice titles), rich text,
-  lists (tags, multi-choice), links (relations), an image (the lead image,
-  as a scale) and a file (a download link).
+  lists (multi-choice), tags (the page's keywords, each a pill linking to a
+  search for it, as Plone's own keywords viewlet renders them), links
+  (relations), an image (the lead image, as a scale) and a file (a download
+  link).
 - **Labels, placeholders, layouts.** Each field can show its title as a
   label. The single block can show a placeholder when the field is empty.
   The section renders as a stack of fields or as a two-column table.
@@ -69,8 +71,8 @@ and no field types.
   fields are empty here, and follows every field typed on the canvas.
 - **Same markup on every surface.** The public page, the editor canvas and
   an Aurora frontend all render the same HTML, dressed by one stylesheet.
-- **Themeable through CSS custom properties.** Fifteen `--metadata-*`
-  properties control rhythm, labels, links, images and the table.
+- **Themeable through CSS custom properties.** Twenty-one `--metadata-*`
+  properties control rhythm, labels, tags, links, images and the table.
 - **Block width and background** come from the host's regular block styling
   controls.
 
@@ -158,6 +160,7 @@ The value element depends on the kind:
 | `text` | `<div class="metadata-value metadata-value--text">text</div>` |
 | `richtext` | `<div class="metadata-value metadata-value--richtext">html</div>` |
 | `list` | `… <ul class="metadata-list"><li class="metadata-item">…</li></ul>` |
+| `tags` | `… <ul class="metadata-list"><li class="metadata-item"><a class="metadata-tag" rel="nofollow" href>…</a></li></ul>` |
 | `links` | `… <ul class="metadata-list"><li class="metadata-item"><a class="metadata-link" href>…</a></li></ul>` |
 | `image` | `… <img class="metadata-image" src alt>` |
 | `file` | `… <a class="metadata-link" href>filename</a>` |
@@ -251,7 +254,7 @@ replaced by the server's on every load.
 
 ## Theming
 
-The blocks are styled through fifteen CSS custom properties. Set them on
+The blocks are styled through twenty-one CSS custom properties. Set them on
 `:root` or on your theme's own scope root, where they inherit into the
 blocks. Do not set them on `.metadata-block` itself and do not override the
 blocks' rules directly: the stylesheet is `@scope`-wrapped, and a scoped
@@ -271,6 +274,12 @@ inherits in and wins without any specificity games.
 | `--metadata-label-color` | `currentColor` | label colour |
 | `--metadata-value-size` | `1rem` | value font size |
 | `--metadata-list-gap` | `0.5rem` | gap between the items of a list or links value |
+| `--metadata-tag-padding` | `0.125rem 0.5rem` | padding inside a tag pill |
+| `--metadata-tag-border` | `1px solid currentColor` | tag pill `border` |
+| `--metadata-tag-radius` | `0.25rem` | tag pill `border-radius` |
+| `--metadata-tag-size` | `0.875rem` | tag font size |
+| `--metadata-tag-color` | `currentColor` | tag colour |
+| `--metadata-tag-decoration` | `none` | tag `text-decoration` |
 | `--metadata-link-color` | `currentColor` | link colour |
 | `--metadata-link-decoration` | `underline` | link `text-decoration` |
 | `--metadata-image-width` | `100%` | `max-width` of an image value |
@@ -296,7 +305,10 @@ Notes:
 - A text value keeps its line breaks (`white-space: pre-line`), so a
   multi-line description renders as written.
 - The blocks set no focus outline, so the host's own `:focus-visible` style
-  reaches the links.
+  reaches the links and the tags.
+- A tag is an outlined pill rather than an underlined link, the anatomy of
+  Plone's keywords viewlet in the blocks' own classes. It carries no hover
+  rule of its own, so the theme's link hover reaches it.
 
 Versioning of this interface: adding a property is a minor release. Removing
 or renaming a property, or changing a default, is a breaking change.

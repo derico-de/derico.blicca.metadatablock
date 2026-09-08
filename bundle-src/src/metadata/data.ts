@@ -11,7 +11,7 @@
  * Nothing here reads a field off the content item. What both renderers read
  * is the `catalog` the server's serializer injects at load time — every
  * offered field of the content item as an `{id, title, kind, value}` row,
- * the value already reduced to one of six display kinds — and strips again
+ * the value already reduced to one of seven display kinds — and strips again
  * on save. The canvas only ever *fetches* one (see `catalog-source.ts`) when
  * it holds a node the server has never serialized.
  */
@@ -35,10 +35,10 @@ export type MetadataSectionData = {
 /**
  * The display kinds a catalog row's `value` can take. The server reduces
  * every Dexterity field type to one of these at derivation time, so the
- * renderers know six shapes and no field types.
+ * renderers know seven shapes and no field types.
  * PARITY: `metadata_data.KINDS`. Extended together or not at all.
  */
-export const KINDS = ['text', 'richtext', 'list', 'links', 'image', 'file'] as const;
+export const KINDS = ['text', 'richtext', 'list', 'tags', 'links', 'image', 'file'] as const;
 
 export type Kind = (typeof KINDS)[number];
 
@@ -231,7 +231,7 @@ export function resolveValue(kind: string, value: unknown): Value | null {
     const items = (Array.isArray(value) ? value : []).map(text).filter(Boolean);
     return items.length ? items : null;
   }
-  if (kind === 'links') {
+  if (kind === 'tags' || kind === 'links') {
     const links = (Array.isArray(value) ? value : []).map(link).filter((l): l is Link => !!l);
     return links.length ? links : null;
   }

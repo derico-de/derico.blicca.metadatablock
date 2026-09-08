@@ -24,8 +24,8 @@ import {
 } from '../src/metadata/data';
 
 describe('the tables', () => {
-  it('know six kinds and two layouts', () => {
-    expect(KINDS).toEqual(['text', 'richtext', 'list', 'links', 'image', 'file']);
+  it('know seven kinds and two layouts', () => {
+    expect(KINDS).toEqual(['text', 'richtext', 'list', 'tags', 'links', 'image', 'file']);
     expect(LAYOUT_IDS).toEqual(['list', 'table']);
     expect(INPUTS).toEqual(['line', 'text', 'number', 'boolean', 'select', 'tokens', 'datetime', 'date', 'relations', 'file']);
     expect(LAYOUT_IDS).toContain(DEFAULT_LAYOUT);
@@ -154,6 +154,16 @@ describe('resolveValue', () => {
       ]),
     ).toEqual([{ href: '/a', title: 'A' }]);
     expect(resolveValue('links', [])).toBeNull();
+  });
+
+  it('tags are screened exactly as links are', () => {
+    expect(
+      resolveValue('tags', [
+        { href: '/@@search?Subject%3Alist=a', title: 'a' },
+        { href: 'javascript:x', title: 'evil' },
+      ]),
+    ).toEqual([{ href: '/@@search?Subject%3Alist=a', title: 'a' }]);
+    expect(resolveValue('tags', [])).toBeNull();
   });
 
   it('image needs a screened src', () => {

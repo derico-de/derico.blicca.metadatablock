@@ -2,6 +2,14 @@
 
 ## 1.0.0a1 (unreleased)
 
+- Tags are a display kind of their own. A field whose values are keywords
+  the site's catalog indexes (`subjects`, in `Subject`) now derives as
+  `tags` rather than as a plain `list`: the server reduces it to one
+  `{href, title}` row per keyword, each the search link Plone's own keywords
+  viewlet builds, and both renderers draw them as `<a class="metadata-tag"
+  rel="nofollow">` pills inside the usual list. Six new seam properties
+  dress them (`--metadata-tag-padding`, `-border`, `-radius`, `-size`,
+  `-color`, `-decoration`); every other list field renders as before.
 - Fields are edited in the canvas (ADR 0002), as in the Volto block. A
   catalog row now carries `input` — `line`, `text`, `number`, `boolean`,
   `select`, `tokens`, `datetime`, `date`, `relations`, `file`, or empty —

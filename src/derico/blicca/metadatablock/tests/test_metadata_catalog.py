@@ -125,10 +125,34 @@ class TestKinds(CatalogTestCase):
         assert row["kind"] == "richtext"
         assert row["value"] == "<p>Hello <b>world</b> <i>now</i></p>"
 
-    def test_list(self):
+    def test_tags_are_one_search_link_per_keyword(self):
+        # The link Plone's own keywords viewlet builds, from the navigation
+        # root, so a tag in a block reaches the same search as a tag in the
+        # theme's fixed spot.
         row = by_id(self.catalog())["subjects"]
-        assert row["kind"] == "list"
-        assert row["value"] == ["Plone", "Aurora"]
+        root = self.portal.absolute_url()
+        assert row["kind"] == "tags"
+        assert row["value"] == [
+            {"href": f"{root}/@@search?Subject%3Alist=Plone", "title": "Plone"},
+            {"href": f"{root}/@@search?Subject%3Alist=Aurora", "title": "Aurora"},
+        ]
+
+    def test_a_tag_is_url_quoted(self):
+        self.doc.setSubject(("a b/c",))
+        row = by_id(self.catalog())["subjects"]
+        assert row["value"] == [
+            {
+                "href": f"{self.portal.absolute_url()}/@@search?Subject%3Alist=a%20b%2Fc",
+                "title": "a b/c",
+            }
+        ]
+
+    def test_a_collection_that_is_not_tags_stays_a_plain_list(self):
+        from zope import schema
+
+        from derico.blicca.metadatablock.metadata_catalog import _kind_of
+
+        assert _kind_of(schema.List(title="Picks", value_type=schema.TextLine())) == "list"
 
     def test_empty_field_is_offered_with_no_value(self):
         row = by_id(self.catalog())["effective"]
