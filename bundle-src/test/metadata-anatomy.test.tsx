@@ -25,7 +25,14 @@ function fixtureFile(): string {
   throw new Error(`no ${FIXTURE} above ${process.cwd()}`);
 }
 
-type Case = { name: string; note: string; data: Record<string, unknown>; html: string };
+type Case = {
+  name: string;
+  note: string;
+  data: Record<string, unknown>;
+  html: string;
+  /** The canvas's markup where it is NOT `html` minus its hrefs; see the fixture's comment. */
+  editor?: string;
+};
 
 const ALL = JSON.parse(readFileSync(fixtureFile(), 'utf8')) as {
   metadata: Case[];
@@ -53,7 +60,7 @@ export function skeleton(html: string): string {
 }
 
 const SUITES = [
-  { name: 'metadata', cases: ALL.metadata, floor: 22, View: MetadataView },
+  { name: 'metadata', cases: ALL.metadata, floor: 25, View: MetadataView },
   { name: 'metadataSection', cases: ALL.metadataSection, floor: 10, View: MetadataSectionView },
 ] as const;
 
@@ -81,7 +88,7 @@ for (const suite of SUITES) {
 
     it('drops every href on the editor surface, and changes nothing else', () => {
       for (const entry of suite.cases) {
-        const expected = entry.html.replace(/ href="[^"]*"/g, '');
+        const expected = entry.editor ?? entry.html.replace(/ href="[^"]*"/g, '');
         expect(canonical(markup(entry.data, true)), entry.name).toBe(canonical(expected));
       }
     });

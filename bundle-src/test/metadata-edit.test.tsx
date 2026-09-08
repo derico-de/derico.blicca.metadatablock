@@ -175,6 +175,22 @@ describe('inline editing', () => {
     expect(screen.getByPlaceholderText('Summary')).toBeTruthy();
   });
 
+  it('keeps drawing a block hidden from the view, so its field can still be edited there', () => {
+    const { store, formAtom } = host({ description: 'From the atom' });
+    const data = { field: 'description', showInView: false, catalog: CATALOG };
+    const { container } = render(
+      <Provider store={store}>
+        <MetadataEdit data={data} />
+      </Provider>,
+    );
+    fireEvent.change(screen.getByLabelText('Summary'), { target: { value: 'Typed into a hidden block' } });
+    expect((store.get(formAtom) as any).description).toBe('Typed into a hidden block');
+    expect(container.querySelector('.metadata-block')).toBeTruthy();
+    cleanup();
+    // The visitor gets nothing at all — not the root, so the host drops the band.
+    expect(render(<MetadataView data={data} />).container.innerHTML).toBe('');
+  });
+
   it('a section keeps an empty editable field so it can be filled, in a table cell too', () => {
     const { store, formAtom } = host({ title: 'A doc' });
     const { container } = render(

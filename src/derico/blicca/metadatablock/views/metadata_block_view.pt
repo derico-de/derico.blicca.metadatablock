@@ -1,6 +1,7 @@
 <div xmlns:tal="http://xml.zope.org/namespaces/tal"
      xmlns:metal="http://xml.zope.org/namespaces/metal"
      tal:define="entry view/entry; tag string:div"
+     tal:condition="view/show_in_view"
      tal:attributes="class entry/css">
   <!--! The Metadata block's anatomy: the same markup
         `bundle-src/src/metadata/MetadataView.tsx` emits. One scope-wrapped
@@ -13,7 +14,11 @@
 
         The root is always emitted, with the stored field and its kind when
         the catalog knows it; the label, the value and the placeholder are
-        each conditional on their own content. -->
+        each conditional on their own content.
+
+        The one exception is `showInView` off: then NOTHING is emitted, so
+        the wrapper drops the block's band with it. The canvas still draws
+        the block, which is the point of the setting. -->
   <span class="metadata-label" tal:condition="entry/label" tal:content="entry/label">Label</span>
   <metal:value use-macro="view/value_template/macros/value" />
   <div class="metadata-value metadata-value--placeholder"

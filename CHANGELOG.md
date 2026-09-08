@@ -2,6 +2,24 @@
 
 ## 1.0.0a1 (unreleased)
 
+- The Metadata block takes **Show in view**, on by default. Off, the block
+  publishes nothing at all — not the root, so the wrapper drops its band
+  with it — while the editor draws it as always, so a field the theme
+  already renders elsewhere (the lead image above the content) can be
+  edited in the blocks area without appearing there twice. Stored
+  `showInView`, and the one boolean either block reads as "not false", so
+  every node authored before the setting existed still renders. The
+  sidebar says when a block is hidden, and the section block is unchanged.
+- An image or file field is edited with the widget the Content tab shows,
+  not a bare file input: a thumbnail of the current image at its smallest
+  offered scale, its filename with type and size (`zope.size.byteDisplay`'s
+  own wording), a *Remove existing image* control and a picker to replace
+  it, with the accepted types under it. A picked file is previewed at once
+  from the data URL the upload already produced. The three
+  `nochange`/`remove`/`replace` radios are deliberately not reproduced:
+  they exist because z3c.form POSTs a form, and here not touching the
+  picker IS no change.
+
 - Tags are a display kind of their own. A field whose values are keywords
   the site's catalog indexes (`subjects`, in `Subject`) now derives as
   `tags` rather than as a plain `list`: the server reduces it to one

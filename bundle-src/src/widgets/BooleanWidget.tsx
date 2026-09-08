@@ -7,6 +7,10 @@
  * substitutes an adapter. A namespaced widget of our own is the same
  * control in both hosts, and it stores a real boolean — the renderers
  * accept `true` and nothing else as a label request.
+ *
+ * With nothing stored, the box shows the schema's `default`, as
+ * `MetadataSelectWidget` does; displaying it is **not** storing it, and the
+ * renderer that reads the key applies the same default itself.
  */
 import { FieldShell, labelClass, type FieldShellProps } from './field-shell';
 
@@ -14,12 +18,13 @@ export type MetadataBooleanWidgetProps = FieldShellProps & {
   name?: string;
   defaultValue?: unknown;
   value?: unknown;
+  default?: unknown;
   onChange?: (value: boolean) => void;
 };
 
 export function MetadataBooleanWidget(props: MetadataBooleanWidgetProps) {
   const { description, className, onChange } = props;
-  const checked = (props.value ?? props.defaultValue) === true;
+  const checked = (props.value ?? props.defaultValue ?? props.default) === true;
 
   return (
     <FieldShell

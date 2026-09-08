@@ -257,6 +257,24 @@ class TestMetadataEntry:
         assert metadata_data.metadata_entry({"field": "a b"})["css"] == "metadata-block"
 
 
+class TestShowInView:
+    """The one boolean read as "not false": absent means SHOW."""
+
+    @pytest.mark.parametrize(
+        "data", [None, {}, {"showInView": True}, {"showInView": "no"}, {"showInView": 0}]
+    )
+    def test_anything_but_a_real_false_shows(self, data):
+        assert metadata_data.show_in_view(data) is True
+
+    def test_only_a_real_false_hides(self):
+        assert metadata_data.show_in_view({"showInView": False}) is False
+
+    def test_the_ts_twin_reads_it_the_same_way(self):
+        source = ts_source()
+        assert "export function showInView" in source
+        assert "return data.showInView !== false;" in source
+
+
 class TestSection:
     @pytest.mark.parametrize("stored", [None, "", "grid", 42, ["table"], "Table"])
     def test_layout_falls_back(self, stored):

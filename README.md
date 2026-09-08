@@ -53,6 +53,11 @@ shapes and no field types.
 - **Labels, placeholders, layouts.** Each field can show its title as a
   label. The single block can show a placeholder when the field is empty.
   The section renders as a stack of fields or as a two-column table.
+- **Or shown to nobody.** Turn **Show in view** off and the single block
+  publishes nothing at all — no root, so the host drops its band with it —
+  while the editor still draws it. That is how a field the theme already
+  renders elsewhere, the lead image above the content most of all, gets an
+  editing surface in the blocks area without appearing there twice.
 - **Always current.** Values are not stored with the block. They are
   derived on every page load from the page itself, for the current user,
   and never written back.
@@ -61,7 +66,8 @@ shapes and no field types.
   section's rows and table cells: a bare text control for the title or the
   description, a number or date input, a checkbox, a select over the
   field's terms, tag chips with suggestions, the host's date picker and
-  content browser for related items, a file upload for the lead image.
+  content browser for related items, and for the lead image the same
+  thumbnail-name-size-replace widget the Content tab shows.
   Editing edits the page's field, every Metadata block on the canvas
   follows at once (so does the title node), and Save stores it with the
   blocks. Rich text and fields the author may not write are edited on the
@@ -110,8 +116,11 @@ site. Uninstalling removes the registrations again.
 
 1. Open a page in the Aurora editor and insert the **Metadata** block.
 2. In the sidebar, choose the **Field** from the page's fields.
-3. Tick **Show label** to put the field's title above its value.
-4. Optionally enter a **Placeholder**, shown when the field is empty on
+3. Leave **Show in view** ticked to publish the field here; untick it to
+   keep the block as an editing surface only, drawn in the editor and
+   absent from the page.
+4. Tick **Show label** to put the field's title above its value.
+5. Optionally enter a **Placeholder**, shown when the field is empty on
    this page.
 
 **Metadata section** — several fields:
@@ -125,9 +134,10 @@ site. Uninstalling removes the registrations again.
 
 At the top of both forms, above the controls, the editor says what it has to
 say about this block: that the page's fields are still loading, that no
-field is chosen yet, that the chosen field is empty here and what the
-visitor gets meanwhile, which of a section's fields the page will skip, and
-where each value is edited. Nothing of that is drawn on the canvas — the
+field is chosen yet, that the block is hidden from the page and only edits
+its field, that the chosen field is empty here and what the visitor gets
+meanwhile, which of a section's fields the page will skip, and where each
+value is edited. Nothing of that is drawn on the canvas — the
 canvas is the page as the visitor will read it.
 
 Both blocks take a block width and, if the theme offers one, a background
@@ -144,7 +154,9 @@ draws a control of its kind where the value goes — a text control (an
 empty one shows the placeholder, or the field's title), a number or date
 input, a checkbox, a select, tag chips (type a tag and press Enter; the
 page's existing tags are suggested), a list of related items with the
-content browser to add more, a file upload. What you edit is the page's
+content browser to add more, and for an image or a file the widget the
+Content tab shows: a thumbnail of what is there now, its name, type and
+size, a way to remove it and a picker to replace it. What you edit is the page's
 field, so a section that shows the same field updates at once, and so does
 the title at the top of the canvas. Save stores it together with the
 blocks. Rich text, and fields you may not write, are shown as the visitor
@@ -193,7 +205,9 @@ The **Metadata section** block:
 
 - The roots are always emitted. The single block's root carries the chosen
   field as `has--field--<id>` and, once the page's catalog knows the field,
-  its kind as `has--kind--<kind>`.
+  its kind as `has--kind--<kind>`. The one exception is a Metadata block
+  with **Show in view** off: it emits nothing at all, so the host's wrapper
+  goes with it and the page carries no trace of the block.
 - Everything inside is left out when it has nothing to show.
 - The block width and background classes are added by the host on a wrapper
   around this markup, as for every Aurora block.
@@ -236,7 +250,8 @@ hook Aurora's title node uses, and the Blicca wrapper's save carries every
 field of that atom the canvas changed next to the blocks (block add-on
 contract §1.7). Each control sits in a `<div class="metadata-control">`
 inside the value element and writes the shape the content PATCH takes back
-(a token, a list of tags, an ISO date, `{ '@id' }` rows, a base64 upload);
+(a token, a list of tags, an ISO date, `{ '@id' }` rows, a base64 upload —
+the image control previewing the picked file from that same data URL);
 the wrapper stops keyboard and clipboard events so the editor's own
 handlers never see them. Dates use the host's `datetime` widget and related
 items the host's `object_browser`; everything else is a native element. The

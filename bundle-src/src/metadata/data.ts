@@ -19,6 +19,7 @@
 /** Everything the two renderers read. `unknown`, because nothing is required. */
 export type MetadataData = {
   field?: unknown;
+  showInView?: unknown;
   showLabel?: unknown;
   placeholder?: unknown;
   /** Injected by the server's serializer; never authored, never persisted. */
@@ -271,6 +272,22 @@ export function storedField(data: MetadataData): string {
 
 export function showLabel(data: MetadataData): boolean {
   return data.showLabel === true;
+}
+
+/**
+ * Whether the block renders for a VISITOR. `true` unless the author turned
+ * it off, so every node authored before the setting existed keeps rendering
+ * — which is why this is the one boolean of the block read as "not false"
+ * rather than "is true".
+ *
+ * Off, the block is an editing surface and nothing else: the canvas draws it
+ * so the field can be filled in (a lead image the theme already renders
+ * above the content, say), and the public page emits nothing at all — not
+ * the root, not the placeholder — so the host drops the wrapper band with
+ * it. PARITY: `metadata_data.show_in_view`.
+ */
+export function showInView(data: MetadataData): boolean {
+  return data.showInView !== false;
 }
 
 export function placeholder(data: MetadataData): string {

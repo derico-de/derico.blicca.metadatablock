@@ -1,9 +1,9 @@
 /**
  * What the editor has to SAY about a block — every state in which the
  * preview is not simply "what the visitor gets": a catalog still loading or
- * lost, no field chosen, a field this page does not have, a field that is
- * empty here and what the visitor gets meanwhile, and where each value is
- * edited.
+ * lost, no field chosen, a field this page does not have, a block the
+ * visitor never sees at all, a field that is empty here and what the visitor
+ * gets meanwhile, and where each value is edited.
  *
  * These notices used to be paragraphs on the canvas, under the block. They
  * are not any more. The canvas is the page as the visitor will read it, and
@@ -26,6 +26,7 @@ import {
   metadataEntry,
   rowFor,
   sectionEntries,
+  showInView,
   storedField,
   type MetadataData,
   type MetadataSectionData,
@@ -61,6 +62,14 @@ export function useMetadataNotices(data: MetadataData): string[] {
     notes.push('Choose a field below.');
   } else if (!entry.kind) {
     notes.push(`This page has no field “${field}”, so the block renders empty.`);
+  } else if (!showInView(data)) {
+    // Hidden: the placeholder and the "empty here" prose are all about what
+    // the page shows, and the page shows nothing.
+    notes.push(
+      entry.input
+        ? `“${entry.title}” is edited in the block and saved with the page, and the page does not show it.`
+        : `“${entry.title}” is not shown on the page. Switch “Show in view” on below to show it.`,
+    );
   } else if (entry.input) {
     notes.push(
       !hasContent(entry)

@@ -241,9 +241,7 @@
 .metadata-block .metadata-input--tokens,
 .metadata-section-block .metadata-input--tokens,
 .metadata-block .metadata-input--relations,
-.metadata-section-block .metadata-input--relations,
-.metadata-block .metadata-input--file,
-.metadata-section-block .metadata-input--file {
+.metadata-section-block .metadata-input--relations {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -287,6 +285,77 @@
   margin: 0;
   font-size: 0.8125rem;
   color: GrayText;
+}
+
+/* ── the image and file control ────────────────────────────────────────
+ *
+ * Plone's own edit-form widget, in the blocks' classes: the current file
+ * previewed, named with its type and size, a way to remove it, a picker to
+ * replace it, and the accepted types under it. Stacked rather than laid in
+ * the value's list rhythm, because that is the shape the author already
+ * knows from the Content tab.
+ *
+ * LITERALS, not seam properties: this is the editor's chrome around a
+ * value, not part of the published surface, and the published surface's own
+ * image rule (`.metadata-image`) is untouched by it.
+ */
+
+.metadata-block .metadata-input--file,
+.metadata-section-block .metadata-input--file {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--metadata-list-gap, 0.5rem);
+}
+
+/* Bounded like Plone's thumb, so a lead image does not fill the canvas
+ * with what is, here, a control. */
+.metadata-block .metadata-file-preview,
+.metadata-section-block .metadata-file-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 8rem;
+  height: auto;
+}
+
+.metadata-block .metadata-file-current,
+.metadata-section-block .metadata-file-current {
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.metadata-block .metadata-file-meta,
+.metadata-section-block .metadata-file-meta {
+  color: GrayText;
+}
+
+.metadata-block .metadata-file-remove,
+.metadata-section-block .metadata-file-remove {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* The metrics of a Bootstrap `.form-control`, which is what the Content tab
+ * puts around the same input — borrowed in currentColor so it reads right in
+ * whatever the theme sets around the block. */
+.metadata-block .metadata-file-input,
+.metadata-section-block .metadata-file-input {
+  max-width: 100%;
+  margin: 0;
+  padding: 0.375rem 0.75rem;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+  border-radius: 0.25rem;
+  background: transparent;
+  font: inherit;
+  font-size: 0.875rem;
+  color: inherit;
 }
 
 /* ── the editor's own chrome ────────────────────────────────────────────

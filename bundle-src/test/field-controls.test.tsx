@@ -39,7 +39,11 @@ const ROWS = {
   },
   image: {
     id: 'image', title: 'Image', kind: 'image', value: { src: '/i.jpg', alt: '' }, input: 'file',
-    raw: { filename: 'i.jpg', download: '/i.jpg' }, schema: {},
+    raw: {
+      filename: 'i.jpg', download: '/i.jpg', 'content-type': 'image/jpeg', size: 24576,
+      scales: { thumb: { download: '/i-thumb.jpg' } },
+    },
+    schema: {},
   },
 };
 
@@ -280,11 +284,33 @@ describe('relations', () => {
 describe('file', () => {
   afterEach(cleanup);
 
-  it('shows the current file, uploads a picked one as base64, and clears to null', async () => {
-    const { atom } = mount('image', { image: { filename: 'i.jpg', download: '/i.jpg' } });
-    expect(screen.getByText('i.jpg')).toBeTruthy();
+  it('shows the current image the way the Content tab does: a thumbnail, the name, the type and the size', () => {
+    const { container } = mount('image', {
+      image: {
+        filename: 'i.jpg',
+        download: '/i.jpg',
+        'content-type': 'image/jpeg',
+        size: 24576,
+        scales: { thumb: { download: '/i-thumb.jpg' } },
+      },
+    });
+    // The scale, not the full download: this is a control, not the value.
+    expect(container.querySelector('.metadata-file-preview')?.getAttribute('src')).toBe('/i-thumb.jpg');
+    expect(container.querySelector('.metadata-file-name')?.textContent).toBe('i.jpg');
+    expect(container.querySelector('.metadata-file-meta')?.textContent).toBe(' — image/jpeg, 24 KB');
+    expect(screen.getByText('Allowed types: image/*.')).toBeTruthy();
+    expect((screen.getByLabelText('Image') as HTMLInputElement).accept).toBe('image/*');
+  });
+
+  it('falls back to the download where the server offered no scale', () => {
+    const { container } = mount('image', { image: { filename: 'i.jpg', download: '/i.jpg' } });
+    expect(container.querySelector('.metadata-file-preview')?.getAttribute('src')).toBe('/i.jpg');
+    expect(container.querySelector('.metadata-file-meta')).toBeNull();
+  });
+
+  it('uploads a picked one as base64, previews it at once, and clears to null', async () => {
+    const { atom, container } = mount('image', { image: { filename: 'i.jpg', download: '/i.jpg' } });
     const input = screen.getByLabelText('Image') as HTMLInputElement;
-    expect(input.accept).toBe('image/*');
     const file = new File([new Uint8Array([71, 73, 70])], 'dot.gif', { type: 'image/gif' });
     await act(async () => {
       fireEvent.change(input, { target: { files: [file] } });
@@ -296,8 +322,13 @@ describe('file', () => {
       filename: 'dot.gif',
       'content-type': 'image/gif',
     });
-    expect(screen.getByText('dot.gif')).toBeTruthy();
-    fireEvent.click(screen.getByLabelText('Remove dot.gif'));
+    expect(container.querySelector('.metadata-file-name')?.textContent).toBe('dot.gif');
+    // Previewed from the reader's own data URL, so the author sees what they picked.
+    expect(container.querySelector('.metadata-file-preview')?.getAttribute('src')).toMatch(/^data:image\/gif/);
+    expect(container.querySelector('.metadata-file-meta')?.textContent).toBe(' — image/gif, 1 KB');
+    fireEvent.click(screen.getByRole('button', { name: 'Remove existing image' }));
     expect(atom().image).toBeNull();
+    expect(container.querySelector('.metadata-file-preview')).toBeNull();
+    expect(container.querySelector('.metadata-file-name')).toBeNull();
   });
 });

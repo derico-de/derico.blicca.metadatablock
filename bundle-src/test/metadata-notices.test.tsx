@@ -71,6 +71,18 @@ describe('the Metadata block’s notices', () => {
     expect(screen.getByText(/until then the page shows the placeholder/)).toBeTruthy();
   });
 
+  it('says a hidden block is not published, whether or not its field is editable', () => {
+    render(<MetadataNoticeWidget data={{ field: 'description', showInView: false, catalog: CATALOG }} />);
+    expect(
+      screen.getByText('“Summary” is edited in the block and saved with the page, and the page does not show it.'),
+    ).toBeTruthy();
+    cleanup();
+    render(<MetadataNoticeWidget data={{ field: 'modified', showInView: false, catalog: CATALOG }} />);
+    expect(
+      screen.getByText('“Modified” is not shown on the page. Switch “Show in view” on below to show it.'),
+    ).toBeTruthy();
+  });
+
   it('says where a filled editable field is edited, and where a shown-only one is', () => {
     const { store } = host({ description: 'From the atom' });
     render(

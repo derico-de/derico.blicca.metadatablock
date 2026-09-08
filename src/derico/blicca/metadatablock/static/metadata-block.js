@@ -137,6 +137,9 @@ function storedField(data) {
 function showLabel(data) {
   return data.showLabel === true;
 }
+function showInView(data) {
+  return data.showInView !== false;
+}
 function placeholder(data) {
   return text(data.placeholder);
 }
@@ -217,6 +220,7 @@ function MetadataValue({ entry: entry2, tag, isEditMode, input }) {
   }
 }
 function MetadataView({ data = {}, isEditMode, renderInput: renderInput2 }) {
+  if (!isEditMode && !showInView(data)) return null;
   const entry2 = metadataEntry(data);
   const input = renderInput2?.(entry2, entry2.placeholder) ?? null;
   return /* @__PURE__ */ jsxs("div", { className: entry2.css, children: [
@@ -539,18 +543,48 @@ function RelationsControl({ entry: entry2 }) {
     ) : /* @__PURE__ */ jsx("p", { className: "metadata-control-note", children: "This host has no content picker." })
   ] });
 }
+function byteDisplay(size) {
+  const bytes = typeof size === "number" ? size : Number(size);
+  if (!Number.isFinite(bytes) || bytes < 0) return "";
+  if (bytes === 0) return "0 KB";
+  if (bytes <= 1024) return "1 KB";
+  if (bytes > 1048576) return `${(bytes / 1048576).toFixed(2)} MB`;
+  return `${Math.floor(bytes / 1024)} KB`;
+}
+const PREVIEW_SCALES = ["thumb", "mini", "preview", "teaser"];
+function scaleOf(value) {
+  if (!value) return "";
+  const scales = isRecord(value.scales) ? value.scales : {};
+  for (const name of PREVIEW_SCALES) {
+    const scale = scales[name];
+    if (isRecord(scale) && typeof scale.download === "string") return scale.download;
+  }
+  return typeof value.download === "string" ? value.download : "";
+}
 function FileControl({ entry: entry2 }) {
   const [bound, setValue] = useControlValue(entry2);
   const fileRef = useRef(null);
-  const current = isRecord(bound) ? bound : null;
+  const [picked, setPicked] = useState(null);
   const image = entry2.kind === "image";
+  const current = isRecord(bound) ? bound : null;
+  const uploaded = !!current && typeof current.data === "string";
   const name = current ? String(current.filename ?? "") : "";
+  const type = current ? String(current["content-type"] ?? "") : "";
+  const source = image ? uploaded ? picked?.url ?? "" : scaleOf(current) : "";
+  const size = byteDisplay(uploaded ? picked?.size : current?.size);
+  const meta = [type, size].filter(Boolean).join(", ");
+  const clear = () => {
+    setValue(null);
+    setPicked(null);
+    if (fileRef.current) fileRef.current.value = "";
+  };
   const onPick = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const url = typeof reader.result === "string" ? reader.result : "";
+      setPicked({ url, size: file.size });
       setValue({
         data: url.slice(url.indexOf(",") + 1),
         encoding: "base64",
@@ -561,32 +595,24 @@ function FileControl({ entry: entry2 }) {
     reader.readAsDataURL(file);
   };
   return /* @__PURE__ */ jsxs("div", { className: "metadata-input metadata-input--file", children: [
-    current && name ? /* @__PURE__ */ jsxs("span", { className: "metadata-token", children: [
-      /* @__PURE__ */ jsx("span", { children: name }),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          type: "button",
-          className: "metadata-token-remove",
-          "aria-label": `Remove ${name}`,
-          onClick: () => {
-            setValue(null);
-            if (fileRef.current) fileRef.current.value = "";
-          },
-          children: "×"
-        }
-      )
+    source ? /* @__PURE__ */ jsx("img", { className: "metadata-file-preview", src: source, alt: "" }) : null,
+    name ? /* @__PURE__ */ jsxs("p", { className: "metadata-file-current", children: [
+      /* @__PURE__ */ jsx("span", { className: "metadata-file-name", children: name }),
+      meta ? /* @__PURE__ */ jsx("span", { className: "metadata-file-meta", children: ` — ${meta}` }) : null
     ] }) : null,
+    name ? /* @__PURE__ */ jsx("button", { type: "button", className: "metadata-file-remove", onClick: clear, children: image ? "Remove existing image" : "Remove existing file" }) : null,
     /* @__PURE__ */ jsx(
       "input",
       {
         ref: fileRef,
         type: "file",
+        className: "metadata-file-input",
         "aria-label": entry2.title,
         accept: image ? "image/*" : void 0,
         onChange: onPick
       }
-    )
+    ),
+    image ? /* @__PURE__ */ jsx("p", { className: "metadata-control-note", children: "Allowed types: image/*." }) : null
   ] });
 }
 function FieldControl({ entry: entry2, placeholder: placeholder2 }) {
@@ -722,7 +748,7 @@ function MetadataSchema({ formData = {} } = {}) {
       {
         id: "default",
         title: "Default",
-        fields: ["metadataNotice", "field", "showLabel", "placeholder"]
+        fields: ["metadataNotice", "field", "showInView", "showLabel", "placeholder"]
       },
       style.fieldset
     ],
@@ -736,6 +762,15 @@ function MetadataSchema({ formData = {} } = {}) {
         description: "Which of this page’s fields to show.",
         widget: "metadata_field",
         catalog: formData.catalog
+      },
+      showInView: {
+        title: "Show in view",
+        description: "Off, the field is only edited here and never shown on the page.",
+        widget: "metadata_boolean",
+        // NOT a storage guarantee — both renderers read an absent value as
+        // `true` themselves, so a block authored before the setting existed
+        // still renders.
+        default: true
       },
       showLabel: {
         title: "Show label",
@@ -814,7 +849,7 @@ function FieldShell({
 }
 function MetadataBooleanWidget(props) {
   const { description, className, onChange } = props;
-  const checked = (props.value ?? props.defaultValue) === true;
+  const checked = (props.value ?? props.defaultValue ?? props.default) === true;
   return /* @__PURE__ */ jsx(
     FieldShell,
     {
@@ -995,6 +1030,10 @@ function useMetadataNotices(data) {
     notes.push("Choose a field below.");
   } else if (!entry2.kind) {
     notes.push(`This page has no field “${field}”, so the block renders empty.`);
+  } else if (!showInView(data)) {
+    notes.push(
+      entry2.input ? `“${entry2.title}” is edited in the block and saved with the page, and the page does not show it.` : `“${entry2.title}” is not shown on the page. Switch “Show in view” on below to show it.`
+    );
   } else if (entry2.input) {
     notes.push(
       !hasContent(entry2) ? `“${entry2.title}” is empty on this page. Type into the block to fill it in; until then the page ${entry2.placeholder ? "shows the placeholder" : "renders the block empty"}.` : `“${entry2.title}” is edited in the block and saved with the page.`

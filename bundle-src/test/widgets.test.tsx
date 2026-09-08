@@ -50,6 +50,17 @@ describe('metadata_boolean', () => {
     render(<MetadataBooleanWidget label="Show label" value={'yes' as any} />);
     expect((screen.getByLabelText('Show label') as HTMLInputElement).checked).toBe(false);
   });
+
+  it('shows the schema default while nothing is stored, without storing it', () => {
+    const onChange = vi.fn();
+    render(<MetadataBooleanWidget label="Show in view" default onChange={onChange} />);
+    expect((screen.getByLabelText('Show in view') as HTMLInputElement).checked).toBe(true);
+    expect(onChange).not.toHaveBeenCalled();
+    cleanup();
+    // A stored value outranks it, false included.
+    render(<MetadataBooleanWidget label="Show in view" defaultValue={false} default />);
+    expect((screen.getByLabelText('Show in view') as HTMLInputElement).checked).toBe(false);
+  });
 });
 
 describe('metadata_field', () => {

@@ -26,7 +26,10 @@
     "",
     "The editor surface is `html` with every `href` dropped (the canvas-safety",
     "rule), and nothing else changed. An `img` keeps its `src`: it navigates",
-    "nowhere.",
+    "nowhere. One case departs from that and says so with an `editor` key: a",
+    "block hidden from the view (`showInView: false`) publishes nothing and is",
+    "still drawn on the canvas, which is the whole point of the setting. Only",
+    "the React suite reads `editor`; the server has no editor surface.",
     "",
     "`catalog` in `data` is the DERIVED key the server's serializer injects: every",
     "offered field of the content item as an `{id, title, kind, value}` row. A",
@@ -239,6 +242,47 @@
         "catalog": [{ "id": "title", "title": " Title ", "kind": "text", "value": "  A doc  " }]
       },
       "html": "<div class=\"metadata-block has--field--title has--kind--text\"><span class=\"metadata-label\">Title</span><div class=\"metadata-value metadata-value--text\">A doc</div></div>"
+    },
+    {
+      "name": "hidden-from-view",
+      "note": "`showInView: false`: the visitor gets NOTHING — not the root, so the host drops the block's band with it. `editor` is what the canvas draws instead, because the block is kept to edit the field, not to show it.",
+      "data": {
+        "field": "image",
+        "showInView": false,
+        "catalog": [
+          {
+            "id": "image",
+            "title": "Lead Image",
+            "kind": "image",
+            "value": { "src": "http://nohost/plone/doc/@@images/image-800.jpeg", "alt": "A cat" }
+          }
+        ]
+      },
+      "html": "",
+      "editor": "<div class=\"metadata-block has--field--image has--kind--image\"><div class=\"metadata-value metadata-value--image\"><img class=\"metadata-image\" src=\"http://nohost/plone/doc/@@images/image-800.jpeg\" alt=\"A cat\"></div></div>"
+    },
+    {
+      "name": "hidden-from-view-placeholder",
+      "note": "Hidden is hidden: the author's own placeholder does not leak onto the page either, and the label goes with it.",
+      "data": {
+        "field": "description",
+        "showInView": false,
+        "showLabel": true,
+        "placeholder": "No summary yet",
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": null }]
+      },
+      "html": "",
+      "editor": "<div class=\"metadata-block has--field--description has--kind--text\"><span class=\"metadata-label\">Summary</span><div class=\"metadata-value metadata-value--placeholder\">No summary yet</div></div>"
+    },
+    {
+      "name": "show-in-view-must-be-false",
+      "note": "Nothing is trusted, and the default is TO SHOW: only a real `false` hides the block, so every node authored before the setting existed still renders.",
+      "data": {
+        "field": "description",
+        "showInView": "no",
+        "catalog": [{ "id": "description", "title": "Summary", "kind": "text", "value": "A short summary." }]
+      },
+      "html": "<div class=\"metadata-block has--field--description has--kind--text\"><div class=\"metadata-value metadata-value--text\">A short summary.</div></div>"
     }
   ],
   "metadataSection": [

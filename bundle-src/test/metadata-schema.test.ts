@@ -11,7 +11,7 @@ import {
   METADATA_BLOCK_TYPE,
   METADATA_SECTION_BLOCK_TYPE,
 } from '../src/metadata/schema';
-import { DERIVED_KEYS, LAYOUTS, DEFAULT_LAYOUT } from '../src/metadata/data';
+import { DERIVED_KEYS, LAYOUTS, DEFAULT_LAYOUT, showInView } from '../src/metadata/data';
 import { installUpstreamRegistry } from './upstream-registry';
 
 installUpstreamRegistry(config as any);
@@ -26,10 +26,11 @@ describe('the Metadata block', () => {
     expect(METADATA_BLOCK_TYPE).toBe('metadata');
   });
 
-  it('offers the notices, the field, the label flag, the placeholder and the width', () => {
+  it('offers the notices, the field, the two flags, the placeholder and the width', () => {
     expect(fieldsOf(schema)).toEqual([
       'metadataNotice',
       'field',
+      'showInView',
       'showLabel',
       'placeholder',
       'blockWidth',
@@ -39,8 +40,15 @@ describe('the Metadata block', () => {
 
   it('names namespaced widgets, so both hosts render the same controls', () => {
     expect(schema.properties.field.widget).toBe('metadata_field');
+    expect(schema.properties.showInView.widget).toBe('metadata_boolean');
     expect(schema.properties.showLabel.widget).toBe('metadata_boolean');
     expect(schema.properties.metadataNotice.widget).toBe('metadata_notice');
+  });
+
+  it('offers “Show in view” on by default, which is what both renderers assume', () => {
+    expect(schema.properties.showInView.default).toBe(true);
+    expect(showInView({})).toBe(true);
+    expect(showInView({ showInView: false })).toBe(false);
   });
 
   it('leads with the notices, and hands them the whole node to reason about', () => {

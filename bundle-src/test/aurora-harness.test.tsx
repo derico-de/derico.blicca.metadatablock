@@ -36,7 +36,10 @@ const bundleSourcePath = path.resolve(
 
 const FIXTURES = JSON.parse(
   readFileSync(path.resolve(import.meta.dirname, '../../tests/anatomy-cases.json'), 'utf8'),
-) as { metadata: Array<{ name: string; data: any }>; metadataSection: Array<{ name: string; data: any }> };
+) as {
+  metadata: Array<{ name: string; data: any; html: string }>;
+  metadataSection: Array<{ name: string; data: any; html: string }>;
+};
 
 /** `Field.tsx`'s resolution chain, for the attributes the schemas use. */
 function resolveWidget(name: string, property: Record<string, any>) {
@@ -58,6 +61,7 @@ describe.each([
     {
       metadataNotice: 'ours',
       field: 'ours',
+      showInView: 'ours',
       showLabel: 'ours',
       placeholder: 'default',
       blockWidth: 'upstream',
@@ -122,7 +126,10 @@ describe('the blocks join Aurora rather than displacing it', () => {
 describe('the views render standalone — in Aurora they ARE the public rendering', () => {
   for (const testCase of FIXTURES.metadata) {
     it(`metadata renders ${testCase.name}`, () => {
-      expect(render(<MetadataView data={testCase.data} />).container.innerHTML).toBeTruthy();
+      const markup = render(<MetadataView data={testCase.data} />).container.innerHTML;
+      // Every case renders standalone — except the ones whose whole point is
+      // that nothing is published (`showInView: false`, fixture `html: ""`).
+      expect(Boolean(markup), testCase.name).toBe(testCase.html !== '');
       cleanup();
     });
   }

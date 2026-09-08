@@ -265,19 +265,73 @@ function RelationsControl({ entry }: { entry: Entry }) {
   );
 }
 
-/** An image or file: the current one, an upload to replace it, a way to clear it. */
+/**
+ * Bytes as Plone prints them — ``zope.size.byteDisplay``, which is what the
+ * edit form's file widget shows — so the line under the preview reads the
+ * same on both surfaces.
+ */
+function byteDisplay(size: unknown): string {
+  const bytes = typeof size === 'number' ? size : Number(size);
+  if (!Number.isFinite(bytes) || bytes < 0) return '';
+  if (bytes === 0) return '0 KB';
+  if (bytes <= 1024) return '1 KB';
+  if (bytes > 1048576) return `${(bytes / 1048576).toFixed(2)} MB`;
+  return `${Math.floor(bytes / 1024)} KB`;
+}
+
+/** The scales the preview prefers, smallest useful first. Plone's own thumb_tag order. */
+const PREVIEW_SCALES = ['thumb', 'mini', 'preview', 'teaser'];
+
+/** A stored image's smallest offered scale, else its download. `''` for an upload. */
+function scaleOf(value: Record<string, unknown> | null): string {
+  if (!value) return '';
+  const scales = isRecord(value.scales) ? value.scales : {};
+  for (const name of PREVIEW_SCALES) {
+    const scale = scales[name];
+    if (isRecord(scale) && typeof scale.download === 'string') return scale.download;
+  }
+  return typeof value.download === 'string' ? value.download : '';
+}
+
+/**
+ * An image or file, drawn the way Plone's own edit form draws one
+ * (`plone/app/z3cform/templates/image_input.pt`): the current file
+ * previewed, named with its type and size, a way to remove it and a picker
+ * to replace it — minus the three `nochange`/`remove`/`replace` radios,
+ * which exist only because z3c.form POSTs a form and has no other way to
+ * say "no change". Here the atom holds the field: not touching the picker
+ * IS no change, and Remove writes `null`.
+ *
+ * A freshly picked file is previewed from the data URL the reader already
+ * produced for the upload, so replacing an image shows the new one at once.
+ */
 function FileControl({ entry }: { entry: Entry }) {
   const [bound, setValue] = useControlValue(entry);
   const fileRef = useRef<HTMLInputElement>(null);
-  const current = isRecord(bound) ? bound : null;
+  const [picked, setPicked] = useState<{ url: string; size: number } | null>(null);
   const image = entry.kind === 'image';
+  const current = isRecord(bound) ? bound : null;
+  // An upload the author just made carries `data`; anything else is what the
+  // server serialized, with its scales and its size.
+  const uploaded = !!current && typeof current.data === 'string';
   const name = current ? String(current.filename ?? '') : '';
+  const type = current ? String(current['content-type'] ?? '') : '';
+  const source = image ? (uploaded ? (picked?.url ?? '') : scaleOf(current)) : '';
+  const size = byteDisplay(uploaded ? picked?.size : current?.size);
+  const meta = [type, size].filter(Boolean).join(', ');
+
+  const clear = () => {
+    setValue(null);
+    setPicked(null);
+    if (fileRef.current) fileRef.current.value = '';
+  };
   const onPick = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       const url = typeof reader.result === 'string' ? reader.result : '';
+      setPicked({ url, size: file.size });
       setValue({
         data: url.slice(url.indexOf(',') + 1),
         encoding: 'base64',
@@ -287,31 +341,30 @@ function FileControl({ entry }: { entry: Entry }) {
     };
     reader.readAsDataURL(file);
   };
+
   return (
     <div className="metadata-input metadata-input--file">
-      {current && name ? (
-        <span className="metadata-token">
-          <span>{name}</span>
-          <button
-            type="button"
-            className="metadata-token-remove"
-            aria-label={`Remove ${name}`}
-            onClick={() => {
-              setValue(null);
-              if (fileRef.current) fileRef.current.value = '';
-            }}
-          >
-            ×
-          </button>
-        </span>
+      {source ? <img className="metadata-file-preview" src={source} alt="" /> : null}
+      {name ? (
+        <p className="metadata-file-current">
+          <span className="metadata-file-name">{name}</span>
+          {meta ? <span className="metadata-file-meta">{` — ${meta}`}</span> : null}
+        </p>
+      ) : null}
+      {name ? (
+        <button type="button" className="metadata-file-remove" onClick={clear}>
+          {image ? 'Remove existing image' : 'Remove existing file'}
+        </button>
       ) : null}
       <input
         ref={fileRef}
         type="file"
+        className="metadata-file-input"
         aria-label={entry.title}
         accept={image ? 'image/*' : undefined}
         onChange={onPick}
       />
+      {image ? <p className="metadata-control-note">Allowed types: image/*.</p> : null}
     </div>
   );
 }

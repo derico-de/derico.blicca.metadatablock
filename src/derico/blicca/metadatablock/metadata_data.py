@@ -230,6 +230,23 @@ def show_label(data):
     return (data or {}).get("showLabel") is True
 
 
+def show_in_view(data):
+    """Whether the block renders for a VISITOR.
+
+    ``True`` unless the author turned it off, so every node authored before
+    the setting existed keeps rendering — which is why this is the one
+    boolean of the block read as "not false" rather than "is true".
+
+    Off, the block is an editing surface and nothing else: the canvas draws
+    it so the field can be filled in (a lead image the theme already renders
+    above the content, say), and the public renderer emits nothing at all —
+    not the root, not the placeholder — so the wrapper's band goes with it
+    (``_render_block`` drops a block whose renderer returned no markup).
+    PARITY: ``data.ts``'s ``showInView``.
+    """
+    return (data or {}).get("showInView") is not False
+
+
 def placeholder(data):
     """What to show when the field has no value. Plain text."""
     return text((data or {}).get("placeholder"))

@@ -94,7 +94,7 @@ class TestRegistration(MetadataViewTestCase):
 
 class TestAnatomy(MetadataViewTestCase):
     def test_the_fixture_covers_the_states_the_rules_enumerate(self):
-        assert len(METADATA_CASES) >= 22
+        assert len(METADATA_CASES) >= 25
         assert len({case["name"] for case in METADATA_CASES}) == len(METADATA_CASES)
         assert all(case["note"] for case in METADATA_CASES)
 
@@ -109,6 +109,22 @@ class TestAnatomy(MetadataViewTestCase):
     def test_emits_no_whitespace_between_elements(self):
         richest = next(case for case in METADATA_CASES if case["name"] == "text-with-label")
         assert not re.search(r">\s+<", self.render(richest["data"]))
+
+    def test_a_hidden_block_leaves_the_page_with_no_band_at_all(self):
+        """`showInView: false`: no markup, so the wrapper drops the block."""
+        node = {
+            "field": "description",
+            "showInView": False,
+            "placeholder": "No summary yet",
+            "catalog": [
+                {"id": "description", "title": "Summary", "kind": "text", "value": "A summary."}
+            ],
+        }
+        assert self.render(node) == ""
+        dispatcher = BlockDispatchMixin()
+        dispatcher.context = self.context
+        dispatcher.request = self._request()
+        assert dispatcher.render_block_data(dict(node, **{"@type": METADATA_BLOCK_TYPE})) == ""
 
     def test_escapes_authored_text_but_not_rich_text(self):
         markup = self.render({

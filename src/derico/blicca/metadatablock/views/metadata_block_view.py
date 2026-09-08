@@ -28,6 +28,16 @@ class MetadataBlockView(MetadataRenderingBase):
     """Render a metadata block."""
 
     @property
+    def show_in_view(self):
+        """Whether the visitor gets this block at all.
+
+        Off, the template emits nothing and ``_render_block`` drops the
+        host's wrapper with it, so a block kept only to edit its field in
+        the canvas leaves no band on the page.
+        """
+        return metadata_data.show_in_view(self.block)
+
+    @property
     def entry(self):
         """The one field, prepared for the template."""
         (found,) = self.prepare([metadata_data.metadata_entry(self.block)])

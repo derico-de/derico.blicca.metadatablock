@@ -90,7 +90,7 @@ export function MetadataSchema({ formData = {} }: SchemaArgs = {}) {
       {
         id: 'default',
         title: 'Default',
-        fields: ['metadataNotice', 'field', 'showLabel', 'placeholder'],
+        fields: ['metadataNotice', 'field', 'showInView', 'showLabel', 'placeholder'],
       },
       style.fieldset,
     ],
@@ -104,6 +104,15 @@ export function MetadataSchema({ formData = {} }: SchemaArgs = {}) {
         description: 'Which of this page’s fields to show.',
         widget: 'metadata_field',
         catalog: formData.catalog,
+      },
+      showInView: {
+        title: 'Show in view',
+        description: 'Off, the field is only edited here and never shown on the page.',
+        widget: 'metadata_boolean',
+        // NOT a storage guarantee — both renderers read an absent value as
+        // `true` themselves, so a block authored before the setting existed
+        // still renders.
+        default: true,
       },
       showLabel: {
         title: 'Show label',
