@@ -88,8 +88,10 @@ for a user who may not type it (ADR 0001's live title, kept).
 
 - ADR 0001's "Editing" section is superseded; its "Formatting" section and
   everything about the catalog stand. The Content tab remains where rich
-  text and any field the user may not write are edited, and the notices
-  say which is which.
+  text and any field the user may not write are edited, and the block's
+  settings sidebar says which is which. The notices were drawn on the canvas
+  when this ADR was written; they moved to the sidebar so the canvas can be
+  the page and nothing else (`notices.ts`, `widgets/NoticeWidget.tsx`).
 - A field surface (the footer) shows the controls but does not persist a
   bound field — its save service stores only the blocks container. Accepted
   as the contract states it.

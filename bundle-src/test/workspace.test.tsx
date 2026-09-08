@@ -22,10 +22,17 @@ describe('install()', () => {
     expect(upstream.blocks.blocksConfig.metadataSection).toBe(MetadataSectionBlockInfo);
   });
 
-  it('registers the four namespaced widgets, and only those', () => {
+  it('registers the six namespaced widgets, and only those', () => {
     install(upstream);
     expect(Object.keys(METADATA_WIDGETS).sort()).toEqual(
-      ['metadata_boolean', 'metadata_field', 'metadata_fields', 'metadata_select'].sort(),
+      [
+        'metadata_boolean',
+        'metadata_field',
+        'metadata_fields',
+        'metadata_notice',
+        'metadata_section_notice',
+        'metadata_select',
+      ].sort(),
     );
     for (const [key, widget] of Object.entries(METADATA_WIDGETS)) {
       expect(upstream.getWidget(key)).toBe(widget);

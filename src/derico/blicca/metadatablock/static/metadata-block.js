@@ -1,8 +1,8 @@
-import { jsxs, jsx, Fragment } from "react/jsx-runtime";
+import { jsxs, jsx } from "react/jsx-runtime";
+import { useState, useEffect, useRef, useLayoutEffect, useId, createElement } from "react";
+import config from "@plone/registry";
 import { atom, useAtomValue } from "jotai";
 import { useFieldFocusedAtom, getStyleFieldDefinitionsFromRegistry } from "@plone/helpers";
-import config from "@plone/registry";
-import { useState, useEffect, useRef, useLayoutEffect, useId, createElement } from "react";
 const base = {
   viewBox: "0 0 24 24",
   fill: "none",
@@ -187,47 +187,6 @@ function sectionEntries(data, keepEmpty) {
   }
   return found;
 }
-const fallbackFormAtom = atom({});
-function formAtom() {
-  const registry = config;
-  try {
-    const method = registry.getUtility?.({ name: "formAtom", type: "atom" })?.method;
-    const found = typeof method === "function" ? method() : null;
-    return found ?? fallbackFormAtom;
-  } catch {
-    return fallbackFormAtom;
-  }
-}
-function isBound(row) {
-  return row.kind === "text" && (row.input === "line" || row.input === "text" || row.id === "title");
-}
-function useLiveRows(rows) {
-  const content = useAtomValue(formAtom());
-  if (!rows) return null;
-  return rows.map((row) => {
-    const live = content && typeof content === "object" ? content[row.id] : void 0;
-    if (live === void 0) return row;
-    const next = row.input ? { ...row, raw: live } : row;
-    return isBound(row) && typeof live === "string" ? { ...next, value: live } : next;
-  });
-}
-function hasContent(entry2) {
-  if (!entry2.input || entry2.raw === void 0) return entry2.value !== null;
-  const raw = entry2.raw;
-  if (raw == null || raw === "" || raw === false) return raw === false;
-  if (typeof raw === "string") return raw.trim() !== "";
-  if (Array.isArray(raw)) return raw.length > 0;
-  if (typeof raw === "object") return Object.keys(raw).length > 0;
-  return true;
-}
-function useFieldBinding(fieldId) {
-  const [value, setValue] = useFieldFocusedAtom(formAtom(), fieldId);
-  return [value, setValue];
-}
-function useControlValue(entry2) {
-  const [bound, setValue] = useFieldBinding(entry2.id);
-  return [bound === void 0 ? entry2.raw : bound, setValue];
-}
 function MetadataValue({ entry: entry2, tag, isEditMode, input }) {
   const Tag = tag;
   if (input) return /* @__PURE__ */ jsx(Tag, { className: `metadata-value metadata-value--${entry2.kind || "text"}`, children: input });
@@ -318,6 +277,47 @@ function useCatalog(data) {
   if (!endpoint) return { catalog: null, state: "failed" };
   if (!fetched || fetched.url !== endpoint) return { catalog: null, state: "loading" };
   return fetched.catalog ? { catalog: fetched.catalog, state: "fetched" } : { catalog: null, state: "failed" };
+}
+const fallbackFormAtom = atom({});
+function formAtom() {
+  const registry = config;
+  try {
+    const method = registry.getUtility?.({ name: "formAtom", type: "atom" })?.method;
+    const found = typeof method === "function" ? method() : null;
+    return found ?? fallbackFormAtom;
+  } catch {
+    return fallbackFormAtom;
+  }
+}
+function isBound(row) {
+  return row.kind === "text" && (row.input === "line" || row.input === "text" || row.id === "title");
+}
+function useLiveRows(rows) {
+  const content = useAtomValue(formAtom());
+  if (!rows) return null;
+  return rows.map((row) => {
+    const live = content && typeof content === "object" ? content[row.id] : void 0;
+    if (live === void 0) return row;
+    const next = row.input ? { ...row, raw: live } : row;
+    return isBound(row) && typeof live === "string" ? { ...next, value: live } : next;
+  });
+}
+function hasContent(entry2) {
+  if (!entry2.input || entry2.raw === void 0) return entry2.value !== null;
+  const raw = entry2.raw;
+  if (raw == null || raw === "" || raw === false) return raw === false;
+  if (typeof raw === "string") return raw.trim() !== "";
+  if (Array.isArray(raw)) return raw.length > 0;
+  if (typeof raw === "object") return Object.keys(raw).length > 0;
+  return true;
+}
+function useFieldBinding(fieldId) {
+  const [value, setValue] = useFieldFocusedAtom(formAtom(), fieldId);
+  return [value, setValue];
+}
+function useControlValue(entry2) {
+  const [bound, setValue] = useFieldBinding(entry2.id);
+  return [bound === void 0 ? entry2.raw : bound, setValue];
 }
 const stop$1 = (event) => event.stopPropagation();
 function FieldInput({ entry: entry2, placeholder: placeholder2 }) {
@@ -646,42 +646,9 @@ function usePreviewCatalog(data) {
 function renderInput(entry2, placeholder2 = "") {
   return entry2.input ? createElement(FieldControl, { entry: entry2, placeholder: placeholder2 }) : null;
 }
-function catalogNotices(state) {
-  if (state === "loading") return ["Loading this page’s fields…"];
-  if (state === "failed") {
-    return ["The fields could not be loaded for the preview. Save and reload the page to see them."];
-  }
-  return [];
-}
-const EDIT_HINT = "Previewed as you: the values come from this page. Edit them on the Content tab.";
-const INLINE_HINT = "Previewed as you: fields with a control are edited here and saved with the page; every other field is edited on the Content tab.";
 function MetadataEdit(props) {
-  const data = props.data ?? {};
-  const { preview, state, rows } = usePreviewCatalog(data);
-  const entry2 = metadataEntry(preview);
-  const field = storedField(data);
-  const notes = catalogNotices(state);
-  if (!notes.length) {
-    if (!field) {
-      notes.push("Choose a field in the sidebar.");
-    } else if (!entry2.kind) {
-      notes.push(`This page has no field “${field}”, so the block renders empty.`);
-    } else if (entry2.input) {
-      notes.push(
-        !hasContent(entry2) ? `“${entry2.title}” is empty here — fill it in. Until then the page ${entry2.placeholder ? "shows the placeholder" : "renders the block empty"}.` : `“${entry2.title}” is edited here and saved with the page.`
-      );
-    } else if (entry2.value === null) {
-      notes.push(
-        entry2.placeholder ? `“${entry2.title}” is empty here, so the placeholder shows.` : `“${entry2.title}” is empty here, so the block renders empty.`
-      );
-    } else if (rows) {
-      notes.push(rows.some((row) => row.input) ? INLINE_HINT : EDIT_HINT);
-    }
-  }
-  return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(MetadataView, { data: preview, isEditMode: true, renderInput }),
-    notes.map((note) => /* @__PURE__ */ jsx("p", { className: "metadata-notice", contentEditable: false, children: note }, note))
-  ] });
+  const { preview } = usePreviewCatalog(props.data ?? {});
+  return /* @__PURE__ */ jsx(MetadataView, { data: preview, isEditMode: true, renderInput });
 }
 function MetadataSectionView({ data = {}, isEditMode, renderInput: renderInput2 }) {
   const title = sectionTitle(data);
@@ -708,31 +675,8 @@ function MetadataSectionView({ data = {}, isEditMode, renderInput: renderInput2 
   ] });
 }
 function MetadataSectionEdit(props) {
-  const data = props.data ?? {};
-  const { preview, state, rows } = usePreviewCatalog(data);
-  const specs = fieldSpecs(data);
-  const published = sectionEntries(preview);
-  const typed = sectionEntries(preview, (candidate) => !!candidate.input).filter((e) => e.input);
-  const notes = catalogNotices(state);
-  if (!notes.length) {
-    if (!specs.length) {
-      notes.push("No fields selected. Add fields in the sidebar.");
-    } else if (rows) {
-      const skipped = specs.filter((spec) => {
-        const row = rowFor(preview, spec.field);
-        return !row || !hasContent(entry(row, spec.showLabel));
-      }).map((spec) => rowFor(preview, spec.field)?.title || spec.field);
-      if (skipped.length) {
-        notes.push(`Empty here, so not shown on the page: ${skipped.join(", ")}.`);
-      }
-      if (typed.length) notes.push(INLINE_HINT);
-      else if (published.length) notes.push(EDIT_HINT);
-    }
-  }
-  return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(MetadataSectionView, { data: preview, isEditMode: true, renderInput }),
-    notes.map((note) => /* @__PURE__ */ jsx("p", { className: "metadata-notice", contentEditable: false, children: note }, note))
-  ] });
+  const { preview } = usePreviewCatalog(props.data ?? {});
+  return /* @__PURE__ */ jsx(MetadataSectionView, { data: preview, isEditMode: true, renderInput });
 }
 const METADATA_BLOCK_TYPE = "metadata";
 const METADATA_SECTION_BLOCK_TYPE = "metadataSection";
@@ -775,10 +719,18 @@ function MetadataSchema({ formData = {} } = {}) {
   return {
     title: "Metadata",
     fieldsets: [
-      { id: "default", title: "Default", fields: ["field", "showLabel", "placeholder"] },
+      {
+        id: "default",
+        title: "Default",
+        fields: ["metadataNotice", "field", "showLabel", "placeholder"]
+      },
       style.fieldset
     ],
     properties: {
+      metadataNotice: {
+        widget: "metadata_notice",
+        data: formData
+      },
       field: {
         title: "Field",
         description: "Which of this page’s fields to show.",
@@ -804,10 +756,18 @@ function MetadataSectionSchema({ formData = {} } = {}) {
   return {
     title: "Metadata section",
     fieldsets: [
-      { id: "default", title: "Default", fields: ["title", "layout", "fields"] },
+      {
+        id: "default",
+        title: "Default",
+        fields: ["metadataNotice", "title", "layout", "fields"]
+      },
       style.fieldset
     ],
     properties: {
+      metadataNotice: {
+        widget: "metadata_section_notice",
+        data: formData
+      },
       title: {
         title: "Heading",
         description: "Optional heading above the fields."
@@ -1016,11 +976,85 @@ function MetadataFieldsWidget(props) {
     }
   );
 }
+const EDIT_HINT = "Previewed as you: the values come from this page. Edit them on the Content tab.";
+const INLINE_HINT = "Previewed as you: fields with a control are edited in the block and saved with the page; every other field is edited on the Content tab.";
+function catalogNotices(state) {
+  if (state === "loading") return ["Loading this page’s fields…"];
+  if (state === "failed") {
+    return ["The fields could not be loaded for the preview. Save and reload the page to see them."];
+  }
+  return [];
+}
+function useMetadataNotices(data) {
+  const { preview, state, rows } = usePreviewCatalog(data);
+  const entry2 = metadataEntry(preview);
+  const field = storedField(data);
+  const notes = catalogNotices(state);
+  if (notes.length) return notes;
+  if (!field) {
+    notes.push("Choose a field below.");
+  } else if (!entry2.kind) {
+    notes.push(`This page has no field “${field}”, so the block renders empty.`);
+  } else if (entry2.input) {
+    notes.push(
+      !hasContent(entry2) ? `“${entry2.title}” is empty on this page. Type into the block to fill it in; until then the page ${entry2.placeholder ? "shows the placeholder" : "renders the block empty"}.` : `“${entry2.title}” is edited in the block and saved with the page.`
+    );
+  } else if (entry2.value === null) {
+    notes.push(
+      entry2.placeholder ? `“${entry2.title}” is empty on this page, so the placeholder shows.` : `“${entry2.title}” is empty on this page, so the block renders empty.`
+    );
+  } else if (rows) {
+    notes.push(rows.some((row) => row.input) ? INLINE_HINT : EDIT_HINT);
+  }
+  return notes;
+}
+function useMetadataSectionNotices(data) {
+  const { preview, state, rows } = usePreviewCatalog(data);
+  const specs = fieldSpecs(data);
+  const published = sectionEntries(preview);
+  const typed = sectionEntries(preview, (candidate) => !!candidate.input).filter((e) => e.input);
+  const notes = catalogNotices(state);
+  if (notes.length) return notes;
+  if (!specs.length) {
+    notes.push("No fields selected yet. Add them below.");
+  } else if (rows) {
+    const skipped = specs.filter((spec) => {
+      const row = rowFor(preview, spec.field);
+      return !row || !hasContent(entry(row, spec.showLabel));
+    }).map((spec) => rowFor(preview, spec.field)?.title || spec.field);
+    if (skipped.length) {
+      notes.push(`Empty on this page, so not shown: ${skipped.join(", ")}.`);
+    }
+    if (typed.length) notes.push(INLINE_HINT);
+    else if (published.length) notes.push(EDIT_HINT);
+  }
+  return notes;
+}
+const noticeClass = "metadata-notice text-xs font-normal text-quanta-pigeon";
+function NoticeList({ notes, className }) {
+  if (!notes.length) return null;
+  return /* @__PURE__ */ jsx(
+    "div",
+    {
+      role: "status",
+      className: `metadata-notice-widget flex flex-col gap-1${className ? ` ${className}` : ""}`,
+      children: notes.map((note) => /* @__PURE__ */ jsx("p", { className: noticeClass, children: note }, note))
+    }
+  );
+}
+function MetadataNoticeWidget(props) {
+  return /* @__PURE__ */ jsx(NoticeList, { notes: useMetadataNotices(props.data ?? {}), className: props.className });
+}
+function MetadataSectionNoticeWidget(props) {
+  return /* @__PURE__ */ jsx(NoticeList, { notes: useMetadataSectionNotices(props.data ?? {}), className: props.className });
+}
 const METADATA_WIDGETS = {
   metadata_field: MetadataFieldWidget,
   metadata_fields: MetadataFieldsWidget,
   metadata_select: MetadataSelectWidget,
-  metadata_boolean: MetadataBooleanWidget
+  metadata_boolean: MetadataBooleanWidget,
+  metadata_notice: MetadataNoticeWidget,
+  metadata_section_notice: MetadataSectionNoticeWidget
 };
 function registerMetadataWidgets(config2) {
   config2.registerWidget({ key: "widget", definition: { ...METADATA_WIDGETS } });

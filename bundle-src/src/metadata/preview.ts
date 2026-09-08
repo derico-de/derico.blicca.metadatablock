@@ -1,7 +1,8 @@
 /**
  * What the canvas previews: the node plus whatever catalog the canvas has,
  * with every bound field kept live from the form atom. Shared by both edit
- * components, which also draw the inline controls (`renderInput`).
+ * components, which also draw the inline controls (`renderInput`), and by
+ * the sidebar's notices (`notices.ts`), so the two never disagree.
  */
 import { useCatalog, type CatalogState } from './catalog-source';
 import type { Entry, Row } from './data';
@@ -22,18 +23,3 @@ export function usePreviewCatalog<T extends { catalog?: unknown }>(
 export function renderInput(entry: Entry, placeholder = ''): ReactNode {
   return entry.input ? createElement(FieldControl, { entry, placeholder }) : null;
 }
-
-/** The notices every state of the catalog ladder deserves, before the block's own. */
-export function catalogNotices(state: CatalogState): string[] {
-  if (state === 'loading') return ['Loading this page’s fields…'];
-  if (state === 'failed') {
-    return ['The fields could not be loaded for the preview. Save and reload the page to see them.'];
-  }
-  return [];
-}
-
-export const EDIT_HINT =
-  'Previewed as you: the values come from this page. Edit them on the Content tab.';
-
-export const INLINE_HINT =
-  'Previewed as you: fields with a control are edited here and saved with the page; every other field is edited on the Content tab.';

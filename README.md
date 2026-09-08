@@ -65,10 +65,12 @@ shapes and no field types.
   Editing edits the page's field, every Metadata block on the canvas
   follows at once (so does the title node), and Save stores it with the
   blocks. Rich text and fields the author may not write are edited on the
-  Content tab, and the canvas says which is which.
+  Content tab, and the block's settings sidebar says which is which.
 - **Live preview in the editor.** A freshly inserted block previews the
-  page's fields before it is ever saved, tells the author which chosen
-  fields are empty here, and follows every field typed on the canvas.
+  page's fields before it is ever saved and follows every field typed on the
+  canvas. The canvas shows the page and nothing else; everything the editor
+  has to say about it — which chosen fields are empty here, where each value
+  is edited — is said at the top of the block's settings sidebar.
 - **Same markup on every surface.** The public page, the editor canvas and
   an Aurora frontend all render the same HTML, dressed by one stylesheet.
 - **Themeable through CSS custom properties.** Twenty-one `--metadata-*`
@@ -121,6 +123,13 @@ site. Uninstalling removes the registrations again.
 4. Under **Fields**, add the fields to show, in order, each with its own
    *Show label* switch (in the table layout the title is always shown).
 
+At the top of both forms, above the controls, the editor says what it has to
+say about this block: that the page's fields are still loading, that no
+field is chosen yet, that the chosen field is empty here and what the
+visitor gets meanwhile, which of a section's fields the page will skip, and
+where each value is edited. Nothing of that is drawn on the canvas — the
+canvas is the page as the visitor will read it.
+
 Both blocks take a block width and, if the theme offers one, a background
 colour.
 
@@ -128,7 +137,7 @@ Only the choices are stored with the page. The values come from the page on
 every load; the canvas previews them as *you* see them, and a field the
 current user may not read is not offered. A field that is empty on the page
 renders nothing (or the placeholder, for the single block); in a section it
-is skipped, and the canvas says so.
+is skipped, and the sidebar names it.
 
 Every field you may write can be edited right in the block: the canvas
 draws a control of its kind where the value goes — a text control (an
@@ -317,7 +326,7 @@ or renaming a property, or changing a default, is a breaking change.
 
 The editor half lives in `bundle-src/` as the npm package
 `@derico/aurora-metadata-block` (not yet published). It registers both
-blocks and their four sidebar widgets through the usual `install(config)`
+blocks and their six sidebar widgets through the usual `install(config)`
 entry point and uses only upstream Aurora widgets besides, so it works
 without the Blicca wrapper.
 
@@ -338,7 +347,10 @@ Things to know when using it in an Aurora frontend:
   it, so a private page previews nothing until the block is saved and
   reloaded.
 - **Bring your own styling.** The stylesheet is scoped to the Blicca roots
-  and does not apply in an Aurora frontend.
+  and does not apply in an Aurora frontend. The sidebar's notices are the
+  one thing that still comes out dressed: they carry cmsui's own description
+  utilities, so they read like the rest of the panel there, and lose only
+  the rule the stylesheet draws beside them.
 
 ## Development
 

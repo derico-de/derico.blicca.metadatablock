@@ -19,7 +19,7 @@
  * 3. DESCENT, NOT NAMES. Every rule descends from `.metadata-block` or
  *    `.metadata-section-block`, the blocks' own roots — never the host's
  *    `.block-metadata` wrapper stamp. One exception, marked where it
- *    appears: the editor's `.metadata-notice` chrome.
+ *    appears: the editor's `.metadata-notice` sidebar chrome.
  * 4. NEVER SELECT ON `[href]`. The canvas drops every `href` and keeps every
  *    element, tag and class.
  * 5. NO `!important`, and no `outline`.
@@ -291,17 +291,21 @@
 
 /* ── the editor's own chrome ────────────────────────────────────────────
  *
- * EXCEPTION TO DESCENT (rule 3): rendered OUTSIDE the block root, reachable
- * from the scope root instead. Dressed with LITERALS ONLY — never a
- * `--metadata-*` — because it is the editor talking to the author, not part
- * of the blocks' published surface.
+ * EXCEPTION TO DESCENT (rule 3): the notices the sidebar's `metadata_notice`
+ * widgets draw are not in a block at all — they are in the settings panel,
+ * which under Blicca is `#sidebar` inside `.aurora-editor` and so inside
+ * this file's scope root. Reached by name from there.
+ *
+ * Dressed with LITERALS ONLY — never a `--metadata-*` — because it is the
+ * editor talking to the author, not part of the blocks' published surface;
+ * and with only the two properties that mark these paragraphs as the
+ * editor's voice. The type is the host's (the widget carries cmsui's own
+ * description utilities, NoticeWidget.tsx), so nothing here can contradict
+ * it — and in an Aurora frontend, where no scope root exists, the type is
+ * all there is.
  */
 
 .metadata-notice {
-  margin-block: 0.5rem 0;
   padding-inline-start: 0.5rem;
   border-inline-start: 2px solid;
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: GrayText;
 }

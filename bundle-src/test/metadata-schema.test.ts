@@ -26,14 +26,29 @@ describe('the Metadata block', () => {
     expect(METADATA_BLOCK_TYPE).toBe('metadata');
   });
 
-  it('offers the field, the label flag, the placeholder and the width', () => {
-    expect(fieldsOf(schema)).toEqual(['field', 'showLabel', 'placeholder', 'blockWidth']);
+  it('offers the notices, the field, the label flag, the placeholder and the width', () => {
+    expect(fieldsOf(schema)).toEqual([
+      'metadataNotice',
+      'field',
+      'showLabel',
+      'placeholder',
+      'blockWidth',
+    ]);
     for (const name of fieldsOf(schema)) expect(schema.properties).toHaveProperty(name);
   });
 
   it('names namespaced widgets, so both hosts render the same controls', () => {
     expect(schema.properties.field.widget).toBe('metadata_field');
     expect(schema.properties.showLabel.widget).toBe('metadata_boolean');
+    expect(schema.properties.metadataNotice.widget).toBe('metadata_notice');
+  });
+
+  it('leads with the notices, and hands them the whole node to reason about', () => {
+    expect(schema.fieldsets[0].fields[0]).toBe('metadataNotice');
+    const data = { field: 'title', catalog: [] };
+    expect(MetadataSchema({ formData: data }).properties.metadataNotice.data).toBe(data);
+    // Not a control: no title, so the renderer gives it no label to store under.
+    expect(schema.properties.metadataNotice).not.toHaveProperty('title');
   });
 
   it('passes the node’s catalog through to the field widget', () => {
@@ -57,8 +72,21 @@ describe('the Metadata Section block', () => {
     expect(METADATA_SECTION_BLOCK_TYPE).toBe('metadataSection');
   });
 
-  it('offers the heading, the layout, the fields and the width', () => {
-    expect(fieldsOf(schema)).toEqual(['title', 'layout', 'fields', 'blockWidth']);
+  it('offers the notices, the heading, the layout, the fields and the width', () => {
+    expect(fieldsOf(schema)).toEqual([
+      'metadataNotice',
+      'title',
+      'layout',
+      'fields',
+      'blockWidth',
+    ]);
+  });
+
+  it('leads with its own notices, told apart from the single block’s', () => {
+    expect(schema.fieldsets[0].fields[0]).toBe('metadataNotice');
+    expect(schema.properties.metadataNotice.widget).toBe('metadata_section_notice');
+    const data = { fields: [{ field: 'title' }] };
+    expect(MetadataSectionSchema({ formData: data }).properties.metadataNotice.data).toBe(data);
   });
 
   it('offers the layout as a select in BOTH hosts', () => {

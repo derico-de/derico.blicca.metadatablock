@@ -1,7 +1,11 @@
 /**
- * The canvas: the preview each block draws and the notices it adds, in every
- * state the catalog ladder can be in, the live title, and the inline
- * controls for the fields the server marked editable (ADR 0002).
+ * The canvas: the preview each block draws in every state the catalog ladder
+ * can be in, the live title, and the inline controls for the fields the
+ * server marked editable (ADR 0002).
+ *
+ * And nothing besides. What the editor has to SAY about any of those states
+ * is the sidebar's (`metadata-notices.test.tsx`); the canvas is the page as
+ * the visitor will read it, which is what the first test here holds it to.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
@@ -41,56 +45,57 @@ function deferred<T>() {
 describe('the Metadata block with the server’s catalog on the node', () => {
   afterEach(cleanup);
 
-  it('previews the value, hrefs dropped, and says where to edit it', () => {
+  it('previews the value with its hrefs dropped, and fetches nothing', () => {
     const fetch = vi.fn();
     vi.stubGlobal('fetch', fetch);
     const { container } = render(<MetadataEdit data={{ field: 'relatedItems', catalog: CATALOG }} />);
     expect(container.querySelector('.metadata-link')?.getAttribute('href')).toBeNull();
     expect(screen.getByText('A')).toBeTruthy();
-    expect(screen.getByText(/edited on the Content tab/)).toBeTruthy();
     expect(container.querySelector('textarea')).toBeNull();
     expect(fetch).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });
 
-  it('asks for a field when none is chosen', () => {
-    render(<MetadataEdit data={{ catalog: CATALOG }} />);
-    expect(screen.getByText('Choose a field in the sidebar.')).toBeTruthy();
-  });
-
-  it('says why an empty shown-only field renders empty, or shows the placeholder', () => {
+  it('shows the placeholder for an empty shown-only field, and nothing for one without', () => {
     const shown = CATALOG.map((row) => (row.id === 'description' ? { ...row, input: '' } : row));
-    render(<MetadataEdit data={{ field: 'description', catalog: shown }} />);
-    expect(screen.getByText('“Summary” is empty here, so the block renders empty.')).toBeTruthy();
+    const bare = render(<MetadataEdit data={{ field: 'description', catalog: shown }} />);
+    expect(bare.container.querySelector('.metadata-value')).toBeNull();
     cleanup();
     render(<MetadataEdit data={{ field: 'description', placeholder: 'None', catalog: shown }} />);
-    expect(screen.getByText('“Summary” is empty here, so the placeholder shows.')).toBeTruthy();
     expect(screen.getByText('None')).toBeTruthy();
   });
 
-  it('invites typing into an empty editable field, and says what the page shows meanwhile', () => {
+  it('draws a control for an empty editable field, with the placeholder inside it', () => {
     const { container } = render(<MetadataEdit data={{ field: 'description', catalog: CATALOG }} />);
-    expect(screen.getByText(/fill it in\. Until then the page renders the block empty/)).toBeTruthy();
     expect(container.querySelector('textarea')).toBeTruthy();
     expect(container.querySelector('.metadata-value--placeholder')).toBeNull();
     cleanup();
     render(<MetadataEdit data={{ field: 'description', placeholder: 'None', catalog: CATALOG }} />);
-    expect(screen.getByText(/Until then the page shows the placeholder/)).toBeTruthy();
     expect(screen.getByPlaceholderText('None')).toBeTruthy();
     expect(screen.queryByText('None')).toBeNull();
   });
 
-  it('says when the page has no such field', () => {
-    render(<MetadataEdit data={{ field: 'bogus', catalog: CATALOG }} />);
-    expect(screen.getByText('This page has no field “bogus”, so the block renders empty.')).toBeTruthy();
+  it('renders empty for a field the page does not have', () => {
+    const { container } = render(<MetadataEdit data={{ field: 'bogus', catalog: CATALOG }} />);
+    expect(container.querySelector('.metadata-value')).toBeNull();
   });
 
-  it('keeps the notices outside the block root and uneditable', () => {
-    const { container } = render(<MetadataEdit data={{ field: 'title', catalog: CATALOG }} />);
-    const notice = container.querySelector('.metadata-notice')!;
-    expect(notice.parentElement).toBe(container);
-    expect(notice.getAttribute('contenteditable')).toBe('false');
-    expect(container.querySelector('.metadata-block .metadata-notice')).toBeNull();
+  it('draws NO notice: the canvas is the page, prose the visitor never sees is the sidebar’s', () => {
+    for (const data of [
+      {},
+      { field: 'bogus' },
+      { field: 'title' },
+      { field: 'description' },
+      { field: 'relatedItems' },
+    ] as const) {
+      const { container } = render(<MetadataEdit data={{ ...data, catalog: CATALOG }} />);
+      expect(container.querySelector('.metadata-notice'), JSON.stringify(data)).toBeNull();
+      cleanup();
+    }
+    const section = render(
+      <MetadataSectionEdit data={{ fields: [{ field: 'description' }, { field: 'bogus' }], catalog: CATALOG }} />,
+    );
+    expect(section.container.querySelector('.metadata-notice')).toBeNull();
   });
 });
 
@@ -126,7 +131,6 @@ describe('inline editing', () => {
     expect(control.tagName).toBe('TEXTAREA');
     expect(control.value).toBe('From the atom');
     expect(control.closest('.metadata-value--text')).toBeTruthy();
-    expect(screen.getByText('“Summary” is edited here and saved with the page.')).toBeTruthy();
 
     fireEvent.change(control, { target: { value: 'Typed in the canvas\nsecond line' } });
     expect((store.get(formAtom) as any).description).toBe('Typed in the canvas\nsecond line');
@@ -184,33 +188,28 @@ describe('inline editing', () => {
     expect(cell).toBeTruthy();
     expect(container.querySelector('tr.has--field--title textarea')).toBeTruthy();
     expect(container.querySelector('tr.has--field--modified textarea')).toBeNull();
-    expect(screen.getByText('Empty here, so not shown on the page: Summary.')).toBeTruthy();
-    expect(screen.getByText(/edited here and saved with the page/)).toBeTruthy();
 
     fireEvent.change(cell.querySelector('textarea')!, { target: { value: 'Filled in the table' } });
     expect((store.get(formAtom) as any).description).toBe('Filled in the table');
-    // Filled now, so the page will show it: the notice goes.
-    expect(screen.queryByText(/not shown on the page/)).toBeNull();
   });
 });
 
 describe('the Metadata Section block', () => {
   afterEach(cleanup);
 
-  it('asks for fields when none are chosen', () => {
-    render(<MetadataSectionEdit data={{ catalog: CATALOG }} />);
-    expect(screen.getByText('No fields selected. Add fields in the sidebar.')).toBeTruthy();
+  it('renders nothing for a node with no fields chosen', () => {
+    const { container } = render(<MetadataSectionEdit data={{ catalog: CATALOG }} />);
+    expect(container.querySelector('.metadata-section-list')?.childElementCount ?? 0).toBe(0);
   });
 
-  it('names the fields it skipped', () => {
-    render(
+  it('keeps the fields it can draw, skipping the ones the page has nothing for', () => {
+    const { container } = render(
       <MetadataSectionEdit
         data={{ fields: [{ field: 'title' }, { field: 'description' }, { field: 'bogus' }], catalog: CATALOG }}
       />,
     );
-    expect(screen.getByText('Empty here, so not shown on the page: Summary, bogus.')).toBeTruthy();
     expect(screen.getByDisplayValue('A doc')).toBeTruthy();
-    expect(screen.getByText(/edited on the Content tab/)).toBeTruthy();
+    expect(container.querySelector('.has--field--bogus')).toBeNull();
   });
 });
 
@@ -232,7 +231,6 @@ describe('with a never-serialized node', () => {
     vi.stubGlobal('fetch', fetch);
 
     render(<MetadataEdit data={{ field: 'title' }} />);
-    expect(screen.getByText('Loading this page’s fields…')).toBeTruthy();
     expect(fetch).toHaveBeenCalledWith(
       'http://localhost:3000/Plone/doc/@metadata-catalog',
       expect.objectContaining({ credentials: 'same-origin' }),
@@ -245,13 +243,14 @@ describe('with a never-serialized node', () => {
     expect(screen.getByDisplayValue('A doc')).toBeTruthy();
   });
 
-  it('says so when nothing could be fetched', async () => {
+  it('draws an empty block, not an error, when nothing could be fetched', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new Error('offline'))));
-    render(<MetadataSectionEdit data={{ fields: [{ field: 'title' }] }} />);
+    const { container } = render(<MetadataSectionEdit data={{ fields: [{ field: 'title' }] }} />);
     await act(async () => {
       await Promise.resolve();
       await Promise.resolve();
     });
-    expect(screen.getByText(/could not be loaded for the preview/)).toBeTruthy();
+    expect(container.querySelector('.metadata-section-block')).toBeTruthy();
+    expect(container.querySelector('.metadata-value')).toBeNull();
   });
 });

@@ -55,12 +55,24 @@ describe.each([
   [
     'metadata',
     MetadataSchema,
-    { field: 'ours', showLabel: 'ours', placeholder: 'default', blockWidth: 'upstream' },
+    {
+      metadataNotice: 'ours',
+      field: 'ours',
+      showLabel: 'ours',
+      placeholder: 'default',
+      blockWidth: 'upstream',
+    },
   ],
   [
     'metadataSection',
     MetadataSectionSchema,
-    { title: 'default', layout: 'ours', fields: 'ours', blockWidth: 'upstream' },
+    {
+      metadataNotice: 'ours',
+      title: 'default',
+      layout: 'ours',
+      fields: 'ours',
+      blockWidth: 'upstream',
+    },
   ],
 ] as const)('%s: every field resolves to the widget it was designed for', (_name, make, expected) => {
   const properties = make({ formData: {} }).properties as Record<string, Record<string, any>>;

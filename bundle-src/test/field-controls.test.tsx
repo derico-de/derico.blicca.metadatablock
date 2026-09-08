@@ -9,6 +9,7 @@ import config from '@plone/registry';
 
 import MetadataEdit from '../src/metadata/MetadataEdit';
 import MetadataView from '../src/metadata/MetadataView';
+import { MetadataNoticeWidget } from '../src/widgets/NoticeWidget';
 import { installUpstreamRegistry } from './upstream-registry';
 
 const ROWS = {
@@ -97,32 +98,30 @@ describe('every control', () => {
 describe('what counts as filled', () => {
   afterEach(cleanup);
 
+  /**
+   * Read off the sidebar's notices, which is where "empty here" is now said
+   * (`notices.ts`); the canvas draws the control and nothing about it. No
+   * control is rendered here at all, so Aurora's object browser — which
+   * wants a router the canvas does not provide — stays out of it.
+   */
   it('follows the atom for every control, so the notices keep up with the author', () => {
-    const { store, formAtom, aurora } = host({ relatedItems: [], effective: null, exclude_from_nav: false });
-    // Aurora's own object browser wants a router; the picker is not the point here.
-    const widgets = (aurora as any).widgets;
-    const before = widgets.widget.object_browser;
-    widgets.widget.object_browser = () => null;
-    try {
+    const { store, formAtom } = host({ relatedItems: [], effective: null, exclude_from_nav: false });
     render(
       <Provider store={store}>
-        <MetadataEdit data={{ field: 'relatedItems', catalog: CATALOG }} />
-        <MetadataEdit data={{ field: 'effective', catalog: CATALOG }} />
-        <MetadataEdit data={{ field: 'exclude_from_nav', catalog: CATALOG }} />
+        <MetadataNoticeWidget data={{ field: 'relatedItems', catalog: CATALOG }} />
+        <MetadataNoticeWidget data={{ field: 'effective', catalog: CATALOG }} />
+        <MetadataNoticeWidget data={{ field: 'exclude_from_nav', catalog: CATALOG }} />
       </Provider>,
     );
-    expect(screen.getByText(/“Related” is empty here/)).toBeTruthy();
-    expect(screen.getByText(/“Effective” is empty here/)).toBeTruthy();
+    expect(screen.getByText(/“Related” is empty on this page/)).toBeTruthy();
+    expect(screen.getByText(/“Effective” is empty on this page/)).toBeTruthy();
     // a boolean is never "empty": false is an answer
-    expect(screen.getByText('“Exclude” is edited here and saved with the page.')).toBeTruthy();
+    expect(screen.getByText('“Exclude” is edited in the block and saved with the page.')).toBeTruthy();
     act(() => {
       store.set(formAtom, { ...(store.get(formAtom) as object), relatedItems: [{ '@id': '/a', title: 'A' }], effective: '2026-09-08T00:00:00Z' });
     });
-    expect(screen.queryByText(/“Related” is empty here/)).toBeNull();
-    expect(screen.queryByText(/“Effective” is empty here/)).toBeNull();
-    } finally {
-      widgets.widget.object_browser = before;
-    }
+    expect(screen.queryByText(/“Related” is empty on this page/)).toBeNull();
+    expect(screen.queryByText(/“Effective” is empty on this page/)).toBeNull();
   });
 });
 

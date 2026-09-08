@@ -21,6 +21,13 @@
  * serializer's `catalog` on the node is passed through as a widget prop, and
  * the widget fetches one itself for a never-serialized node (the same
  * one-request-per-page cache the canvas uses).
+ *
+ * The first field of each form is not a control at all: `metadataNotice`
+ * carries the editor's own notices about this block (`notices.ts`), which
+ * the canvas deliberately does not draw. It is the one property here that
+ * never becomes a key of the block — its widget stores nothing — and it
+ * takes the whole `formData` as a prop, because what there is to say
+ * depends on every setting at once.
  */
 import { getStyleFieldDefinitionsFromRegistry } from '@plone/helpers';
 
@@ -80,10 +87,18 @@ export function MetadataSchema({ formData = {} }: SchemaArgs = {}) {
   return {
     title: 'Metadata',
     fieldsets: [
-      { id: 'default', title: 'Default', fields: ['field', 'showLabel', 'placeholder'] },
+      {
+        id: 'default',
+        title: 'Default',
+        fields: ['metadataNotice', 'field', 'showLabel', 'placeholder'],
+      },
       style.fieldset,
     ],
     properties: {
+      metadataNotice: {
+        widget: 'metadata_notice',
+        data: formData,
+      },
       field: {
         title: 'Field',
         description: 'Which of this page’s fields to show.',
@@ -110,10 +125,18 @@ export function MetadataSectionSchema({ formData = {} }: SchemaArgs = {}) {
   return {
     title: 'Metadata section',
     fieldsets: [
-      { id: 'default', title: 'Default', fields: ['title', 'layout', 'fields'] },
+      {
+        id: 'default',
+        title: 'Default',
+        fields: ['metadataNotice', 'title', 'layout', 'fields'],
+      },
       style.fieldset,
     ],
     properties: {
+      metadataNotice: {
+        widget: 'metadata_section_notice',
+        data: formData,
+      },
       title: {
         title: 'Heading',
         description: 'Optional heading above the fields.',

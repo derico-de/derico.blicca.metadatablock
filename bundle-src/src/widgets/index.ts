@@ -1,5 +1,5 @@
 /**
- * The Metadata blocks' four sidebar widgets and their registration.
+ * The Metadata blocks' six sidebar widgets and their registration.
  *
  * Every key is **namespaced**. `registerWidget` writes into one global
  * last-wins map, so a block claiming a generic key (`select`, `boolean`,
@@ -10,11 +10,13 @@
 import { MetadataBooleanWidget } from './BooleanWidget';
 import { MetadataFieldWidget } from './FieldSelectWidget';
 import { MetadataFieldsWidget } from './FieldsWidget';
+import { MetadataNoticeWidget, MetadataSectionNoticeWidget } from './NoticeWidget';
 import { MetadataSelectWidget } from './SelectWidget';
 
 export { MetadataBooleanWidget } from './BooleanWidget';
 export { MetadataFieldWidget } from './FieldSelectWidget';
 export { MetadataFieldsWidget } from './FieldsWidget';
+export { MetadataNoticeWidget, MetadataSectionNoticeWidget } from './NoticeWidget';
 export { MetadataSelectWidget } from './SelectWidget';
 
 type WidgetRegistrar = {
@@ -27,6 +29,8 @@ export const METADATA_WIDGETS = {
   metadata_fields: MetadataFieldsWidget,
   metadata_select: MetadataSelectWidget,
   metadata_boolean: MetadataBooleanWidget,
+  metadata_notice: MetadataNoticeWidget,
+  metadata_section_notice: MetadataSectionNoticeWidget,
 } as const;
 
 /**

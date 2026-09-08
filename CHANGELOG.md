@@ -10,6 +10,16 @@
   rel="nofollow">` pills inside the usual list. Six new seam properties
   dress them (`--metadata-tag-padding`, `-border`, `-radius`, `-size`,
   `-color`, `-decoration`); every other list field renders as before.
+- The editor's notices moved off the canvas into the block's settings
+  sidebar, where they lead both forms (`metadata_notice`,
+  `metadata_section_notice`). The canvas now draws the page and nothing
+  else — the preview, and the inline control for a field that has one — so
+  what the author edits looks like what the visitor gets. Everything the
+  editor has to say about a block (a catalog still loading or lost, no field
+  chosen, a field this page does not have, a field empty here and what the
+  page shows meanwhile, which of a section's fields will be skipped, where
+  each value is edited) is said in the panel instead, from the same live
+  preview, and follows the author's typing exactly as before.
 - Fields are edited in the canvas (ADR 0002), as in the Volto block. A
   catalog row now carries `input` — `line`, `text`, `number`, `boolean`,
   `select`, `tokens`, `datetime`, `date`, `relations`, `file`, or empty —
