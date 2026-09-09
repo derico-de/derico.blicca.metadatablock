@@ -2,6 +2,14 @@
 
 ## 1.0.0a1 (unreleased)
 
+- **Show in view** is a setting of BOTH blocks, on by default. The Metadata
+  Section block now takes it too: off, the section publishes nothing at all
+  — not the root, so the wrapper drops its band with it, in either layout —
+  while the editor draws it as always, with every inline control it had, so
+  a group of fields the theme already renders elsewhere can be edited in the
+  blocks area without appearing there twice. It hides the whole block, never
+  one of its fields: which fields a section shows is what its field list is
+  for. The sidebar says when a section is hidden.
 - The Metadata block takes **Show in view**, on by default. Off, the block
   publishes nothing at all — not the root, so the wrapper drops its band
   with it — while the editor draws it as always, so a field the theme
@@ -9,7 +17,7 @@
   edited in the blocks area without appearing there twice. Stored
   `showInView`, and the one boolean either block reads as "not false", so
   every node authored before the setting existed still renders. The
-  sidebar says when a block is hidden, and the section block is unchanged.
+  sidebar says when a block is hidden.
 - An image or file field is edited with the widget the Content tab shows,
   not a bare file input: a thumbnail of the current image at its smallest
   offered scale, its filename with type and size (`zope.size.byteDisplay`'s

@@ -73,6 +73,7 @@ describe.each([
     {
       metadataNotice: 'ours',
       title: 'default',
+      showInView: 'ours',
       layout: 'ours',
       fields: 'ours',
       blockWidth: 'upstream',
@@ -135,7 +136,8 @@ describe('the views render standalone — in Aurora they ARE the public renderin
   }
   for (const testCase of FIXTURES.metadataSection) {
     it(`metadataSection renders ${testCase.name}`, () => {
-      expect(render(<MetadataSectionView data={testCase.data} />).container.innerHTML).toBeTruthy();
+      const markup = render(<MetadataSectionView data={testCase.data} />).container.innerHTML;
+      expect(Boolean(markup), testCase.name).toBe(testCase.html !== '');
       cleanup();
     });
   }

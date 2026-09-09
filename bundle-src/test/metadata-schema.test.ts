@@ -80,14 +80,23 @@ describe('the Metadata Section block', () => {
     expect(METADATA_SECTION_BLOCK_TYPE).toBe('metadataSection');
   });
 
-  it('offers the notices, the heading, the layout, the fields and the width', () => {
+  it('offers the notices, the heading, the flag, the layout, the fields and the width', () => {
     expect(fieldsOf(schema)).toEqual([
       'metadataNotice',
       'title',
+      'showInView',
       'layout',
       'fields',
       'blockWidth',
     ]);
+    for (const name of fieldsOf(schema)) expect(schema.properties).toHaveProperty(name);
+  });
+
+  it('offers “Show in view” on by default, exactly as the single block does', () => {
+    expect(schema.properties.showInView.widget).toBe('metadata_boolean');
+    expect(schema.properties.showInView.default).toBe(true);
+    expect(showInView({ fields: [{ field: 'title' }] })).toBe(true);
+    expect(showInView({ fields: [{ field: 'title' }], showInView: false })).toBe(false);
   });
 
   it('leads with its own notices, told apart from the single block’s', () => {
@@ -104,8 +113,12 @@ describe('the Metadata Section block', () => {
     expect(schema.properties.fields.widget).toBe('metadata_fields');
   });
 
-  it('never offers a derived key', () => {
-    for (const key of DERIVED_KEYS) expect(schema.properties).not.toHaveProperty(key);
+  it('never offers a derived key, and requires nothing', () => {
+    for (const key of DERIVED_KEYS) {
+      expect(fieldsOf(schema)).not.toContain(key);
+      expect(schema.properties).not.toHaveProperty(key);
+    }
+    expect(schema.required).toEqual([]);
   });
 });
 

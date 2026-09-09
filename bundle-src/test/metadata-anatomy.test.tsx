@@ -61,7 +61,7 @@ export function skeleton(html: string): string {
 
 const SUITES = [
   { name: 'metadata', cases: ALL.metadata, floor: 25, View: MetadataView },
-  { name: 'metadataSection', cases: ALL.metadataSection, floor: 10, View: MetadataSectionView },
+  { name: 'metadataSection', cases: ALL.metadataSection, floor: 13, View: MetadataSectionView },
 ] as const;
 
 for (const suite of SUITES) {

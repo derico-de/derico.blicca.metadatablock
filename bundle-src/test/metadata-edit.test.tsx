@@ -15,6 +15,7 @@ import config from '@plone/registry';
 import MetadataEdit from '../src/metadata/MetadataEdit';
 import MetadataSectionEdit from '../src/metadata/MetadataSectionEdit';
 import MetadataView from '../src/metadata/MetadataView';
+import MetadataSectionView from '../src/metadata/MetadataSectionView';
 import { resetCatalogCache } from '../src/metadata/catalog-source';
 import { installUpstreamRegistry } from './upstream-registry';
 
@@ -207,6 +208,27 @@ describe('inline editing', () => {
 
     fireEvent.change(cell.querySelector('textarea')!, { target: { value: 'Filled in the table' } });
     expect((store.get(formAtom) as any).description).toBe('Filled in the table');
+  });
+
+  it('keeps drawing a section hidden from the view, so its fields can still be edited there', () => {
+    const { store, formAtom } = host({ description: 'From the atom' });
+    const data = {
+      title: 'Facts',
+      showInView: false,
+      fields: [{ field: 'description' }],
+      catalog: CATALOG,
+    };
+    const { container } = render(
+      <Provider store={store}>
+        <MetadataSectionEdit data={data} />
+      </Provider>,
+    );
+    fireEvent.change(screen.getByLabelText('Summary'), { target: { value: 'Typed into a hidden section' } });
+    expect((store.get(formAtom) as any).description).toBe('Typed into a hidden section');
+    expect(container.querySelector('.metadata-section-block')).toBeTruthy();
+    cleanup();
+    // The visitor gets nothing at all — not the root, so the host drops the band.
+    expect(render(<MetadataSectionView data={data} />).container.innerHTML).toBe('');
   });
 });
 

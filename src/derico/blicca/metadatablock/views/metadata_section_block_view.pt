@@ -1,12 +1,17 @@
 <section xmlns:tal="http://xml.zope.org/namespaces/tal"
          xmlns:metal="http://xml.zope.org/namespaces/metal"
          tal:define="title view/title; layout view/layout; entries view/entries"
+         tal:condition="view/show_in_view"
          tal:attributes="class view/root_class; aria-label python: title or None">
   <!--! The Metadata Section block's anatomy: the same markup
         `bundle-src/src/metadata/MetadataSectionView.tsx` emits. See
         `metadata_block_view.pt` for the rules; the list layout repeats the
         single block's anatomy per field, the table layout puts one row per
-        field with the title always in the header cell. -->
+        field with the title always in the header cell.
+
+        `showInView` off is the same exception it is there: NOTHING is
+        emitted, so the wrapper drops the block's band with it, while the
+        canvas still draws the section so its fields can be edited. -->
   <h2 class="metadata-section-title" tal:condition="title" tal:content="title">Title</h2>
   <div class="metadata-section-list" tal:condition="python: entries and layout == 'list'">
     <div tal:repeat="entry entries" tal:attributes="class entry/css" tal:define="tag string:div">

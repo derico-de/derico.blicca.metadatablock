@@ -6,6 +6,10 @@
  *
  * With the editor's `renderInput`, an EMPTY field the author may type into
  * is kept (the public page skips it), so the section can be filled in place.
+ *
+ * With `showInView` off the PUBLIC surface emits nothing at all and the
+ * canvas draws the section as usual, so its fields can still be edited
+ * there — the same rule the single block follows.
  */
 import type { ReactNode } from 'react';
 
@@ -13,6 +17,7 @@ import {
   effectiveLayout,
   sectionEntries,
   sectionTitle,
+  showInView,
   type Entry,
   type MetadataSectionData,
 } from './data';
@@ -26,6 +31,9 @@ export type MetadataSectionViewProps = {
 };
 
 export function MetadataSectionView({ data = {}, isEditMode, renderInput }: MetadataSectionViewProps) {
+  // Nothing at all, not an empty root: the host drops a block whose renderer
+  // returns no markup, so the band goes with it.
+  if (!isEditMode && !showInView(data)) return null;
   const title = sectionTitle(data);
   const layout = effectiveLayout(data);
   const entries = sectionEntries(data, renderInput ? (candidate) => !!candidate.input : undefined);

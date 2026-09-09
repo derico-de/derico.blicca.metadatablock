@@ -84,7 +84,7 @@ class TestRegistration(SectionViewTestCase):
 
 class TestAnatomy(SectionViewTestCase):
     def test_the_fixture_covers_the_states_the_rules_enumerate(self):
-        assert len(SECTION_CASES) >= 10
+        assert len(SECTION_CASES) >= 13
         assert len({case["name"] for case in SECTION_CASES}) == len(SECTION_CASES)
         assert all(case["note"] for case in SECTION_CASES)
 
@@ -100,6 +100,23 @@ class TestAnatomy(SectionViewTestCase):
     def test_emits_no_whitespace_between_elements(self, name):
         case = next(case for case in SECTION_CASES if case["name"] == name)
         assert not re.search(r">\s+<", self.render(case["data"]))
+
+    def test_a_hidden_section_leaves_the_page_with_no_band_at_all(self):
+        """`showInView: false`: no markup, so the wrapper drops the block."""
+        node = {
+            "title": "Facts",
+            "showInView": False,
+            "fields": [{"field": "description", "showLabel": True}],
+            "catalog": [
+                {"id": "description", "title": "Summary", "kind": "text", "value": "A summary."}
+            ],
+        }
+        assert self.render(node) == ""
+        dispatcher = BlockDispatchMixin()
+        dispatcher.context = self.context
+        dispatcher.request = self._request()
+        block = dict(node, **{"@type": METADATA_SECTION_BLOCK_TYPE})
+        assert dispatcher.render_block_data(block) == ""
 
     def test_escapes_authored_text(self):
         markup = self.render({

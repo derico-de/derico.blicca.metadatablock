@@ -105,6 +105,26 @@ describe('the Metadata Section block’s notices', () => {
     expect(screen.getByText('No fields selected yet. Add them below.')).toBeTruthy();
   });
 
+  it('says a hidden section is not published, whether or not its fields are editable', () => {
+    render(
+      <MetadataSectionNoticeWidget
+        data={{ fields: [{ field: 'title' }], showInView: false, catalog: CATALOG }}
+      />,
+    );
+    expect(
+      screen.getByText('These fields are edited in the block and saved with the page, and the page does not show them.'),
+    ).toBeTruthy();
+    cleanup();
+    render(
+      <MetadataSectionNoticeWidget
+        data={{ fields: [{ field: 'modified' }], showInView: false, catalog: CATALOG }}
+      />,
+    );
+    expect(
+      screen.getByText('These fields are not shown on the page. Switch “Show in view” on below to show them.'),
+    ).toBeTruthy();
+  });
+
   it('names the fields the page will skip', () => {
     render(
       <MetadataSectionNoticeWidget

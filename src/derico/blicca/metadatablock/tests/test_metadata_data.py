@@ -258,7 +258,11 @@ class TestMetadataEntry:
 
 
 class TestShowInView:
-    """The one boolean read as "not false": absent means SHOW."""
+    """The one boolean read as "not false": absent means SHOW.
+
+    Read the same way for both blocks — the section stores it beside its
+    fields, the single block beside its one field.
+    """
 
     @pytest.mark.parametrize(
         "data", [None, {}, {"showInView": True}, {"showInView": "no"}, {"showInView": 0}]
@@ -268,6 +272,11 @@ class TestShowInView:
 
     def test_only_a_real_false_hides(self):
         assert metadata_data.show_in_view({"showInView": False}) is False
+
+    def test_it_is_a_setting_of_either_block(self):
+        section = {"fields": [{"field": "title"}], "showInView": False}
+        assert metadata_data.show_in_view(section) is False
+        assert metadata_data.show_in_view({"fields": [{"field": "title"}]}) is True
 
     def test_the_ts_twin_reads_it_the_same_way(self):
         source = ts_source()

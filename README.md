@@ -53,10 +53,10 @@ shapes and no field types.
 - **Labels, placeholders, layouts.** Each field can show its title as a
   label. The single block can show a placeholder when the field is empty.
   The section renders as a stack of fields or as a two-column table.
-- **Or shown to nobody.** Turn **Show in view** off and the single block
-  publishes nothing at all — no root, so the host drops its band with it —
-  while the editor still draws it. That is how a field the theme already
-  renders elsewhere, the lead image above the content most of all, gets an
+- **Or shown to nobody.** Turn **Show in view** off and the block — either
+  block — publishes nothing at all, no root, so the host drops its band with
+  it, while the editor still draws it. That is how fields the theme already
+  renders elsewhere, the lead image above the content most of all, get an
   editing surface in the blocks area without appearing there twice.
 - **Always current.** Values are not stored with the block. They are
   derived on every page load from the page itself, for the current user,
@@ -127,9 +127,12 @@ site. Uninstalling removes the registrations again.
 
 1. Insert the **Metadata section** block.
 2. Optionally enter a **Heading**.
-3. Choose the **Layout**: *List* stacks the fields, *Table* puts one field
+3. Leave **Show in view** ticked to publish the fields here; untick it to
+   keep the section as an editing surface only, drawn in the editor and
+   absent from the page.
+4. Choose the **Layout**: *List* stacks the fields, *Table* puts one field
    per row with its title in the first column.
-4. Under **Fields**, add the fields to show, in order, each with its own
+5. Under **Fields**, add the fields to show, in order, each with its own
    *Show label* switch (in the table layout the title is always shown).
 
 At the top of both forms, above the controls, the editor says what it has to
@@ -205,9 +208,9 @@ The **Metadata section** block:
 
 - The roots are always emitted. The single block's root carries the chosen
   field as `has--field--<id>` and, once the page's catalog knows the field,
-  its kind as `has--kind--<kind>`. The one exception is a Metadata block
-  with **Show in view** off: it emits nothing at all, so the host's wrapper
-  goes with it and the page carries no trace of the block.
+  its kind as `has--kind--<kind>`. The one exception is a block with **Show
+  in view** off: it emits nothing at all, so the host's wrapper goes with it
+  and the page carries no trace of the block.
 - Everything inside is left out when it has nothing to show.
 - The block width and background classes are added by the host on a wrapper
   around this markup, as for every Aurora block.

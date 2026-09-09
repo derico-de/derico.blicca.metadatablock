@@ -217,6 +217,23 @@ def entry(row, show_label):
     }
 
 
+def show_in_view(data):
+    """Whether a block renders for a VISITOR. Read by BOTH blocks.
+
+    ``True`` unless the author turned it off, so every node authored before
+    the setting existed keeps rendering — which is why this is the one
+    boolean either block reads as "not false" rather than "is true".
+
+    Off, the block is an editing surface and nothing else: the canvas draws
+    it so its fields can be filled in (a lead image the theme already
+    renders above the content, say), and the public renderer emits nothing
+    at all — not the root, not the placeholder — so the wrapper's band goes
+    with it (``_render_block`` drops a block whose renderer returned no
+    markup). PARITY: ``data.ts``'s ``showInView``.
+    """
+    return (data or {}).get("showInView") is not False
+
+
 # ── the Metadata block ───────────────────────────────────────────────────────
 
 
@@ -228,23 +245,6 @@ def stored_field(data):
 def show_label(data):
     """Whether the author asked for the field's title above its value."""
     return (data or {}).get("showLabel") is True
-
-
-def show_in_view(data):
-    """Whether the block renders for a VISITOR.
-
-    ``True`` unless the author turned it off, so every node authored before
-    the setting existed keeps rendering — which is why this is the one
-    boolean of the block read as "not false" rather than "is true".
-
-    Off, the block is an editing surface and nothing else: the canvas draws
-    it so the field can be filled in (a lead image the theme already renders
-    above the content, say), and the public renderer emits nothing at all —
-    not the root, not the placeholder — so the wrapper's band goes with it
-    (``_render_block`` drops a block whose renderer returned no markup).
-    PARITY: ``data.ts``'s ``showInView``.
-    """
-    return (data or {}).get("showInView") is not False
 
 
 def placeholder(data):

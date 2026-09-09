@@ -23,22 +23,24 @@ _Avoid_: field block (a field is what it shows, not what it is), title block
 (Aurora's title block is a different, editable, thing), property block.
 
 **Show in view**:
-Whether the [[Metadata block]] renders for a visitor. Stored `showInView`,
-and the one boolean of either block read as "not false" rather than "is
-true", so a block authored before the setting existed still renders. Off,
-the public renderers emit NOTHING — not the root, so the host drops the
-block's band with it — and the canvas draws the block as always: the block
-is then an [[input]] and no more, for a field the page renders elsewhere (a
-lead image above the content). A setting of the single block; a section
-shows several fields and is not the place to hide one.
+Whether a block renders for a visitor. Stored `showInView`, and the one
+boolean of either block read as "not false" rather than "is true", so a
+block authored before the setting existed still renders. Off, the public
+renderers emit NOTHING — not the root, so the host drops the block's band
+with it — and the canvas draws the block as always: the block is then an
+[[input]] and no more, for fields the page renders elsewhere (a lead image
+above the content). A setting of BOTH blocks, and of the whole block: a
+section hides every field it shows or none, and which fields it shows is
+what its field list is for.
 _Avoid_: published (the workflow's word), visible (a CSS state, where this
 decides whether there is anything to see), hidden (the flag is named for
 what it does when on).
 
 **Metadata Section block**:
 A block that shows SEVERAL fields of the page, in stored order, each with
-its own label flag, under an optional heading, in one of two [[layout]]s.
-Stored `@type: metadataSection`.
+its own label flag, under an optional heading, in one of two [[layout]]s —
+and, like the single block, only when [[show in view]] is on. Stored
+`@type: metadataSection`.
 _Avoid_: metadata table (one layout of it), fact box (a use of it).
 
 **Field**:

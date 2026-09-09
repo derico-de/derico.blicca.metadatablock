@@ -137,7 +137,7 @@ export function MetadataSectionSchema({ formData = {} }: SchemaArgs = {}) {
       {
         id: 'default',
         title: 'Default',
-        fields: ['metadataNotice', 'title', 'layout', 'fields'],
+        fields: ['metadataNotice', 'title', 'showInView', 'layout', 'fields'],
       },
       style.fieldset,
     ],
@@ -149,6 +149,15 @@ export function MetadataSectionSchema({ formData = {} }: SchemaArgs = {}) {
       title: {
         title: 'Heading',
         description: 'Optional heading above the fields.',
+      },
+      showInView: {
+        title: 'Show in view',
+        description: 'Off, the fields are only edited here and never shown on the page.',
+        widget: 'metadata_boolean',
+        // NOT a storage guarantee — both renderers read an absent value as
+        // `true` themselves, so a block authored before the setting existed
+        // still renders.
+        default: true,
       },
       layout: {
         title: 'Layout',

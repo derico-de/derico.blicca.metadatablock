@@ -95,7 +95,8 @@ export function useMetadataNotices(data: MetadataData): string[] {
  * section's own — which chosen fields the public page skips because they are
  * empty or unknown here, since the page says nothing about them. An empty
  * field the author may type into is kept on the canvas (with its control)
- * and still named as skipped.
+ * and still named as skipped. A section hidden from the view says that and
+ * nothing else, for the same reason the single block does.
  */
 export function useMetadataSectionNotices(data: MetadataSectionData): string[] {
   const { preview, state, rows } = usePreviewCatalog(data);
@@ -108,6 +109,14 @@ export function useMetadataSectionNotices(data: MetadataSectionData): string[] {
 
   if (!specs.length) {
     notes.push('No fields selected yet. Add them below.');
+  } else if (!showInView(data)) {
+    // Hidden: which fields the page skips is prose about what the page
+    // shows, and the page shows nothing.
+    notes.push(
+      typed.length
+        ? 'These fields are edited in the block and saved with the page, and the page does not show them.'
+        : 'These fields are not shown on the page. Switch “Show in view” on below to show them.',
+    );
   } else if (rows) {
     const skipped = specs
       .filter((spec) => {

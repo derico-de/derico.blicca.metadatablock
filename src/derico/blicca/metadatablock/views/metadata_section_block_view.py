@@ -15,6 +15,16 @@ class MetadataSectionBlockView(MetadataRenderingBase):
     """Render a metadata section block."""
 
     @property
+    def show_in_view(self):
+        """Whether the visitor gets this block at all.
+
+        Off, the template emits nothing and ``_render_block`` drops the
+        host's wrapper with it, so a section kept only to edit its fields in
+        the canvas leaves no band on the page.
+        """
+        return metadata_data.show_in_view(self.block)
+
+    @property
     def title(self):
         return metadata_data.section_title(self.block)
 

@@ -26,10 +26,11 @@
     "",
     "The editor surface is `html` with every `href` dropped (the canvas-safety",
     "rule), and nothing else changed. An `img` keeps its `src`: it navigates",
-    "nowhere. One case departs from that and says so with an `editor` key: a",
+    "nowhere. The cases that depart from that say so with an `editor` key: a",
     "block hidden from the view (`showInView: false`) publishes nothing and is",
-    "still drawn on the canvas, which is the whole point of the setting. Only",
-    "the React suite reads `editor`; the server has no editor surface.",
+    "still drawn on the canvas, which is the whole point of the setting — and",
+    "that holds for both blocks. Only the React suite reads `editor`; the",
+    "server has no editor surface.",
     "",
     "`catalog` in `data` is the DERIVED key the server's serializer injects: every",
     "offered field of the content item as an `{id, title, kind, value}` row. A",
@@ -377,6 +378,43 @@
       "note": "A hand-authored field list of the wrong shape is no list at all.",
       "data": { "fields": { "field": "title" }, "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }] },
       "html": "<section class=\"metadata-section-block has--layout--list\"></section>"
+    },
+    {
+      "name": "hidden-from-view",
+      "note": "`showInView: false`: the visitor gets NOTHING — not the root, so the host drops the section's band with it. `editor` is what the canvas draws instead, because the section is kept to edit its fields, not to show them. The heading goes with the rest.",
+      "data": {
+        "title": "Facts",
+        "showInView": false,
+        "fields": [{ "field": "title", "showLabel": true }, { "field": "description" }],
+        "catalog": [
+          { "id": "title", "title": "Title", "kind": "text", "value": "A doc" },
+          { "id": "description", "title": "Summary", "kind": "text", "value": "A short summary." }
+        ]
+      },
+      "html": "",
+      "editor": "<section class=\"metadata-section-block has--layout--list\" aria-label=\"Facts\"><h2 class=\"metadata-section-title\">Facts</h2><div class=\"metadata-section-list\"><div class=\"metadata-block has--field--title has--kind--text\"><span class=\"metadata-label\">Title</span><div class=\"metadata-value metadata-value--text\">A doc</div></div><div class=\"metadata-block has--field--description has--kind--text\"><div class=\"metadata-value metadata-value--text\">A short summary.</div></div></div></section>"
+    },
+    {
+      "name": "hidden-from-view-table",
+      "note": "Hidden is hidden in either layout: the table goes too.",
+      "data": {
+        "layout": "table",
+        "showInView": false,
+        "fields": [{ "field": "title" }],
+        "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }]
+      },
+      "html": "",
+      "editor": "<section class=\"metadata-section-block has--layout--table\"><table class=\"metadata-section-table\"><tbody><tr class=\"metadata-section-row has--field--title has--kind--text\"><th class=\"metadata-label\" scope=\"row\">Title</th><td class=\"metadata-value metadata-value--text\">A doc</td></tr></tbody></table></section>"
+    },
+    {
+      "name": "show-in-view-must-be-false",
+      "note": "Nothing is trusted, and the default is TO SHOW: only a real `false` hides the section, so every node authored before the setting existed still renders.",
+      "data": {
+        "showInView": "no",
+        "fields": [{ "field": "title" }],
+        "catalog": [{ "id": "title", "title": "Title", "kind": "text", "value": "A doc" }]
+      },
+      "html": "<section class=\"metadata-section-block has--layout--list\"><div class=\"metadata-section-list\"><div class=\"metadata-block has--field--title has--kind--text\"><div class=\"metadata-value metadata-value--text\">A doc</div></div></div></section>"
     }
   ]
 }

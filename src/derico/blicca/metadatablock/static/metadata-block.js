@@ -131,14 +131,14 @@ function entry(row, showLabel2) {
     ...row.input ? { raw: row.raw, schema: row.schema } : {}
   };
 }
+function showInView(data) {
+  return data.showInView !== false;
+}
 function storedField(data) {
   return text(data.field);
 }
 function showLabel(data) {
   return data.showLabel === true;
-}
-function showInView(data) {
-  return data.showInView !== false;
 }
 function placeholder(data) {
   return text(data.placeholder);
@@ -677,6 +677,7 @@ function MetadataEdit(props) {
   return /* @__PURE__ */ jsx(MetadataView, { data: preview, isEditMode: true, renderInput });
 }
 function MetadataSectionView({ data = {}, isEditMode, renderInput: renderInput2 }) {
+  if (!isEditMode && !showInView(data)) return null;
   const title = sectionTitle(data);
   const layout = effectiveLayout(data);
   const entries = sectionEntries(data, renderInput2 ? (candidate) => !!candidate.input : void 0);
@@ -794,7 +795,7 @@ function MetadataSectionSchema({ formData = {} } = {}) {
       {
         id: "default",
         title: "Default",
-        fields: ["metadataNotice", "title", "layout", "fields"]
+        fields: ["metadataNotice", "title", "showInView", "layout", "fields"]
       },
       style.fieldset
     ],
@@ -806,6 +807,15 @@ function MetadataSectionSchema({ formData = {} } = {}) {
       title: {
         title: "Heading",
         description: "Optional heading above the fields."
+      },
+      showInView: {
+        title: "Show in view",
+        description: "Off, the fields are only edited here and never shown on the page.",
+        widget: "metadata_boolean",
+        // NOT a storage guarantee — both renderers read an absent value as
+        // `true` themselves, so a block authored before the setting existed
+        // still renders.
+        default: true
       },
       layout: {
         title: "Layout",
@@ -1056,6 +1066,10 @@ function useMetadataSectionNotices(data) {
   if (notes.length) return notes;
   if (!specs.length) {
     notes.push("No fields selected yet. Add them below.");
+  } else if (!showInView(data)) {
+    notes.push(
+      typed.length ? "These fields are edited in the block and saved with the page, and the page does not show them." : "These fields are not shown on the page. Switch “Show in view” on below to show them."
+    );
   } else if (rows) {
     const skipped = specs.filter((spec) => {
       const row = rowFor(preview, spec.field);
