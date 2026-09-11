@@ -72,6 +72,18 @@ behaviors = []
 services = ["@metadata-catalog"]
 views = ["aurora-block-metadata", "aurora-block-metadataSection"]
 
+[tool.uv]
+# Resolve against the Plone the site actually runs, so the lock CI installs is
+# the combination this add-on is developed against.
+constraint-dependencies = ["Products.CMFPlone==6.2.1"]
+
+[tool.uv.sources]
+# plone.blicca.auroraeditor is PRIVATE and not on PyPI. Locally it is the
+# sibling checkout under sources/; CI checks it out beside this repository so
+# the same relative path resolves there. uv ignores a dependency's own
+# sources, so this governs this package's lock and nothing else.
+"plone.blicca.auroraeditor" = { path = "../plone.blicca.auroraeditor", editable = true }
+
 [tool.pytest.ini_options]
 testpaths = ["src/derico/blicca/metadatablock/tests"]
 python_files = ["test_*.py"]
@@ -100,7 +112,8 @@ select = [
 ignore = ["E731"]
 
 [tool.ruff.lint.per-file-ignores]
-"src/**/tests/**" = ["S101"]
+# S105/S106: a test user's password is a fixture, not a secret.
+"src/**/tests/**" = ["S101", "S105", "S106"]
 # Locale update helper shells out to fixed translation tools (i18ndude/msginit).
 "src/**/locales/update.py" = ["S603", "S607"]
 

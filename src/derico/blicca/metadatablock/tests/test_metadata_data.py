@@ -145,8 +145,20 @@ class TestCatalog:
     def test_an_editable_row_keeps_raw_and_schema_and_a_shown_one_neither(self):
         rows = metadata_data.catalog({
             "catalog": [
-                {"id": "subjects", "kind": "list", "input": "tokens", "raw": ["a"], "schema": {"choices": [["a", "A"]]}},
-                {"id": "language", "kind": "text", "input": "select", "raw": {"token": "de"}, "schema": "junk"},
+                {
+                    "id": "subjects",
+                    "kind": "list",
+                    "input": "tokens",
+                    "raw": ["a"],
+                    "schema": {"choices": [["a", "A"]]},
+                },
+                {
+                    "id": "language",
+                    "kind": "text",
+                    "input": "select",
+                    "raw": {"token": "de"},
+                    "schema": "junk",
+                },
                 {"id": "modified", "kind": "text", "raw": "x", "schema": {"type": "string"}},
             ]
         })

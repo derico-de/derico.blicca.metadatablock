@@ -140,7 +140,10 @@ def _kind_of(field):
     return None
 
 
-def _input_of(field):
+# C901: one branch per field kind, most specific interface first. The
+# ordering IS the rule, and splitting it would scatter a chain that has to
+# be read top to bottom.
+def _input_of(field):  # noqa: C901
     """The inline control for a field, or ``""`` when the canvas only shows it.
 
     One of ``metadata_data.INPUTS``, decided from the field's type the way
@@ -419,7 +422,9 @@ def _schema_rows(context, request):
                 try:
                     field_schema = _schema_of(field, control, context, request)
                 except Exception:
-                    logger.exception("Could not describe field %s on %s", name, context.absolute_url())
+                    logger.exception(
+                        "Could not describe field %s on %s", name, context.absolute_url()
+                    )
                     field_schema = None
                 if field_schema is not None:
                     row.update({"input": control, "raw": raw, "schema": field_schema})
