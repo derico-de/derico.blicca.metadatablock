@@ -2,6 +2,17 @@
 
 ## 1.0.0a1 (unreleased)
 
+- The uninstall and upgrade profiles are out of the Add-ons control panel
+  again. `HiddenProfiles` named them all along, but the `INonInstallable`
+  utility was never registered in `configure.zcml` — and the panel (and
+  `GET /@addons`) only ever sees the class through that registration, so the
+  list was inert and `derico.blicca.metadatablock.upgrades` was offered as an installable
+  add-on of its own. Installing an upgrade profile by hand imports its XML
+  without moving the recorded profile version, leaving the site behind what it
+  actually has. The test reads the list out of the utility registry now,
+  where the control panel reads it, instead of instantiating the class — which
+  is why it stayed green through all of this.
+
 - **Show in view** is a setting of BOTH blocks, on by default. The Metadata
   Section block now takes it too: off, the section publishes nothing at all
   — not the root, so the wrapper drops its band with it, in either layout —

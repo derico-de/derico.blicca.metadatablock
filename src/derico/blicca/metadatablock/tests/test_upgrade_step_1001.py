@@ -50,6 +50,25 @@ def normalized(path):
     return walk(ET.parse(path).getroot())  # noqa: S314
 
 
+def hidden_profiles():
+    """Every profile the add-ons panel is told to hide.
+
+    Read from the utility registry rather than from `HiddenProfiles()`: the
+    panel and `GET /@addons` only ever see the class through the
+    `INonInstallable` utility registered in configure.zcml, so a test that
+    instantiates it passes with no registration at all — which is how these
+    profiles came to be offered as installable add-ons in the first place.
+    """
+    from plone.base.interfaces import INonInstallable
+    from zope.component import getAllUtilitiesRegisteredFor
+
+    return [
+        name
+        for utility in getAllUtilitiesRegisteredFor(INonInstallable)
+        for name in getattr(utility, "getNonInstallableProfiles", list)()
+    ]
+
+
 class TestUpgradeProfileParity:
     def test_upgrade_registry_matches_the_default_profile(self):
         assert normalized(UPGRADE_REGISTRY) == normalized(DEFAULT_REGISTRY)
@@ -76,9 +95,7 @@ class TestUpgrade1001:
         assert steps[0]["step"].import_steps == ["plone.app.registry"]
 
     def test_the_upgrade_profile_is_hidden_from_the_control_panel(self):
-        from derico.blicca.metadatablock.setuphandlers import HiddenProfiles
-
-        assert UPGRADE_PROFILE in HiddenProfiles().getNonInstallableProfiles()
+        assert UPGRADE_PROFILE in hidden_profiles()
 
     def test_running_it_on_a_site_at_1000_installs_the_records(self):
         registry = block_addon_records()
