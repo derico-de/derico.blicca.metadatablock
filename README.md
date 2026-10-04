@@ -1,97 +1,66 @@
 # derico.blicca.metadatablock
 
 Two **Metadata blocks** for the Aurora block editor in Plone 6. They show a
-page's own fields inside its blocks area: the title, the description, the
-tags, the dates, the lead image, the related items, or any other field of the
-content type. The **Metadata** block shows one field; the **Metadata section**
-block shows several, as a list or as a table.
+page's own fields inside its blocks area: title, description, tags, dates,
+lead image, related items, or any other field of the content type. The
+**Metadata** block shows one field. The **Metadata section** block shows
+several, as a list or as a table.
 
 Typical uses:
 
 - a "Last modified" line at the bottom of an article;
-- the tags of a page, shown where the layout wants them rather than in the
-  theme's fixed spot;
+- the tags of a page, placed where the layout wants them;
 - a fact box: event dates, contact, state, related pages, in one table;
 - an author box built from the ownership fields.
 
-The blocks work with [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
-which brings the Aurora editor and server-side rendering of Aurora blocks to
-classic Plone 6. The editor half is also a plain Aurora block package
-(`@derico/aurora-metadata-block`) that can be used in an Aurora frontend
-directly, see [Using the blocks in Aurora](#using-the-blocks-in-aurora).
+The blocks run under [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
+which brings the Aurora editor to Blicca, Plone's server-rendered UI
+(formerly Classic UI). The editor half is also a plain Aurora block package,
+`@derico/aurora-metadata-block`, see
+[Using the blocks in Aurora](#using-the-blocks-in-aurora).
 
-## Inspired by volto-metadata-block
-
-This package is heavily inspired by
+The blocks are inspired by
 [`@eeacms/volto-metadata-block`](https://github.com/eea/volto-metadata-block)
-by the European Environment Agency: the same two blocks, the same block ids
-(`metadata` and `metadataSection`), the same idea of a "field" block and a
-"section" of fields with per-field labels and a list or table layout. Thank
-you, EEA, for showing how metadata belongs in the blocks area.
-
-Two things are different on purpose, because the hosts are different. In
-Volto every field is edited inline with its Volto widget; here every field
-type the Volto block edits gets a control of its kind in the canvas — rich
-text excepted, which Blicca keeps in the blocks — while a field the user may
-not write is *shown* and edited where Blicca edits every non-block field, on
-the Content tab. And no field is formatted in the browser: the server reduces
-every field to one of seven display kinds, so both renderers know seven
-shapes and no field types.
+by the European Environment Agency and use the same block ids, `metadata`
+and `metadataSection`.
 
 ## Features
 
 - **Any field of the page.** Every field of the content type and its
   behaviors that the current user may read, plus created, modified and the
-  workflow state. Chosen in the sidebar from a select filled with the page's
-  own fields.
-- **Seven display kinds.** Text (titles, descriptions, numbers, dates and
-  booleans formatted for the request's locale, choice titles), rich text,
-  lists (multi-choice), tags (the page's keywords, each a pill linking to a
-  search for it, as Plone's own keywords viewlet renders them), links
-  (relations), an image (the lead image, as a scale) and a file (a download
-  link).
+  workflow state.
+- **Seven display kinds.** Text, rich text, lists, tags (keyword pills that
+  link to a search), links (relations), image (the lead image as a scale)
+  and file (a download link). Dates, numbers and booleans are formatted for
+  the request's locale.
 - **Labels, placeholders, layouts.** Each field can show its title as a
   label. The single block can show a placeholder when the field is empty.
-  The section renders as a stack of fields or as a two-column table.
-- **Or shown to nobody.** Turn **Show in view** off and the block — either
-  block — publishes nothing at all, no root, so the host drops its band with
-  it, while the editor still draws it. That is how fields the theme already
-  renders elsewhere, the lead image above the content most of all, get an
-  editing surface in the blocks area without appearing there twice.
-- **Always current.** Values are not stored with the block. They are
-  derived on every page load from the page itself, for the current user,
-  and never written back.
+  The section renders as a stack or as a two-column table.
+- **Show in view.** Turned off, the block renders nothing on the public page
+  but stays editable in the editor. Use it to edit a field in the blocks
+  area that the page already shows elsewhere.
+- **Always current.** Values are not stored with the block. They are read
+  from the page on every load, for the current user.
 - **Fields are edited in place.** Every field the author may write gets a
-  control of its kind where its value goes, in the single block and in a
-  section's rows and table cells: a bare text control for the title or the
-  description, a number or date input, a checkbox, a select over the
-  field's terms, tag chips with suggestions, the host's date picker and
-  content browser for related items, and for the lead image the same
-  thumbnail-name-size-replace widget the Content tab shows.
-  Editing edits the page's field, every Metadata block on the canvas
-  follows at once (so does the title node), and Save stores it with the
-  blocks. Rich text and fields the author may not write are edited on the
-  Content tab, and the block's settings sidebar says which is which.
-- **Live preview in the editor.** A freshly inserted block previews the
-  page's fields before it is ever saved and follows every field typed on the
-  canvas. The canvas shows the page and nothing else; everything the editor
-  has to say about it — which chosen fields are empty here, where each value
-  is edited — is said at the top of the block's settings sidebar.
-- **Same markup on every surface.** The public page, the editor canvas and
-  an Aurora frontend all render the same HTML, dressed by one stylesheet.
-- **Themeable through CSS custom properties.** Twenty-one `--metadata-*`
-  properties control rhythm, labels, tags, links, images and the table.
-- **Block width and background** come from the host's regular block styling
-  controls.
+  control of its kind in the canvas: text, number, date, checkbox, select,
+  tag chips, related items, image and file upload. Saving the page stores the
+  field together with the blocks. Rich text and read-only fields are edited
+  on the Content tab.
+- **Live preview in the editor,** also for a freshly inserted block. Notices
+  about a block (no field chosen, field empty, where a value is edited) are
+  shown in the block's settings sidebar, not on the canvas.
+- **One markup, one stylesheet** for the public page, the editor canvas and
+  an Aurora frontend.
+- **Themeable** through twenty-one `--metadata-*` CSS custom properties.
+- **Block width and background colour** come from the editor's regular block
+  styling controls.
 
 ## Requirements
 
 - Plone 6.0 or later
-- `plone.blicca.auroraeditor` 1.0.0a2 or later; inline editing needs a
-  wrapper that sends canvas-edited fields with the save (block add-on
-  contract §1.7)
+- `plone.blicca.auroraeditor` 1.0.0a2 or later
 
-The JavaScript bundle is committed to the package. Nothing needs Node at
+The JavaScript bundle is committed to the package. No Node is needed at
 install time.
 
 ## Installation
@@ -106,64 +75,41 @@ dependencies = [
 ```
 
 Then install **Derico Blicca Metadatablock** from Plone's Add-ons control
-panel, or apply the `derico.blicca.metadatablock:default` GenericSetup
-profile. The profile registers both blocks with the Aurora editor for that
-site. Uninstalling removes the registrations again.
+panel, or apply the `derico.blicca.metadatablock:default` profile. The
+profile registers both blocks with the Aurora editor for that site.
+Uninstalling removes the registrations again.
 
 ## Using the blocks
 
-**Metadata** — one field:
+**Metadata**, one field:
 
-1. Open a page in the Aurora editor and insert the **Metadata** block.
+1. Insert the **Metadata** block in the Aurora editor.
 2. In the sidebar, choose the **Field** from the page's fields.
-3. Leave **Show in view** ticked to publish the field here; untick it to
-   keep the block as an editing surface only, drawn in the editor and
-   absent from the page.
-4. Tick **Show label** to put the field's title above its value.
-5. Optionally enter a **Placeholder**, shown when the field is empty on
-   this page.
+3. Leave **Show in view** on to publish the field here. Turn it off to keep
+   the block as an editing surface only.
+4. Turn on **Show label** to put the field's title above its value.
+5. Optionally enter a **Placeholder**, shown when the field is empty.
 
-**Metadata section** — several fields:
+**Metadata section**, several fields:
 
 1. Insert the **Metadata section** block.
 2. Optionally enter a **Heading**.
-3. Leave **Show in view** ticked to publish the fields here; untick it to
-   keep the section as an editing surface only, drawn in the editor and
-   absent from the page.
+3. Leave **Show in view** on to publish the fields here, or turn it off.
 4. Choose the **Layout**: *List* stacks the fields, *Table* puts one field
    per row with its title in the first column.
 5. Under **Fields**, add the fields to show, in order, each with its own
-   *Show label* switch (in the table layout the title is always shown).
+   *Show label* switch. The table layout always shows the title.
 
-At the top of both forms, above the controls, the editor says what it has to
-say about this block: that the page's fields are still loading, that no
-field is chosen yet, that the block is hidden from the page and only edits
-its field, that the chosen field is empty here and what the visitor gets
-meanwhile, which of a section's fields the page will skip, and where each
-value is edited. Nothing of that is drawn on the canvas — the
-canvas is the page as the visitor will read it.
+Only these choices are stored with the page. The values come from the page
+on every load. The editor previews them as *you* see them, and a field the
+current user may not read is not offered. An empty field renders nothing, or
+the placeholder in the single block. In a section it is skipped.
 
-Both blocks take a block width and, if the theme offers one, a background
-colour.
-
-Only the choices are stored with the page. The values come from the page on
-every load; the canvas previews them as *you* see them, and a field the
-current user may not read is not offered. A field that is empty on the page
-renders nothing (or the placeholder, for the single block); in a section it
-is skipped, and the sidebar names it.
-
-Every field you may write can be edited right in the block: the canvas
-draws a control of its kind where the value goes — a text control (an
-empty one shows the placeholder, or the field's title), a number or date
-input, a checkbox, a select, tag chips (type a tag and press Enter; the
-page's existing tags are suggested), a list of related items with the
-content browser to add more, and for an image or a file the widget the
-Content tab shows: a thumbnail of what is there now, its name, type and
-size, a way to remove it and a picker to replace it. What you edit is the page's
-field, so a section that shows the same field updates at once, and so does
-the title at the top of the canvas. Save stores it together with the
-blocks. Rich text, and fields you may not write, are shown as the visitor
-gets them and edited on the **Content** tab.
+Every field you may write is edited right in the block. What you edit is the
+page's field, so every other block that shows the same field follows at
+once, and so does the page title above the canvas. Rich text and fields you
+may not write are edited on the **Content** tab. The sidebar says which is
+which.
 
 ## Rendered markup
 
@@ -206,90 +152,63 @@ The **Metadata section** block:
 </section>
 ```
 
-- The roots are always emitted. The single block's root carries the chosen
-  field as `has--field--<id>` and, once the page's catalog knows the field,
-  its kind as `has--kind--<kind>`. The one exception is a block with **Show
-  in view** off: it emits nothing at all, so the host's wrapper goes with it
-  and the page carries no trace of the block.
+- The root carries the chosen field as `has--field--<id>` and its kind as
+  `has--kind--<kind>`. With **Show in view** off, nothing is emitted at all.
 - Everything inside is left out when it has nothing to show.
-- The block width and background classes are added by the host on a wrapper
+- Block width and background classes are added by the editor on a wrapper
   around this markup, as for every Aurora block.
 
 ## How it works
 
-The blocks store which fields to show and how, and nothing else. The values
-come from the server:
+The blocks store which fields to show and how, nothing else. The values come
+from the server:
 
 1. On every load of a page, a `plone.restapi` block serialization
-   transformer derives the page's **catalog** — every field the current user
-   may read, as `{id, title, kind, value, input}` rows in schema order, the
-   value already reduced to its display kind and formatted for the request's
-   locale, and `input` naming the inline control the canvas draws (`line`,
-   `text`, `number`, `boolean`, `select`, `tokens`, `datetime`, `date`,
-   `relations`, `file`, or empty — decided from the field type and the
-   user's write permission; an editable row also carries `raw`, the
-   field's restapi value, and `schema`, its `@types` property with the
-   vocabulary's terms inlined) — and injects it into the block data as
-   `catalog`.
+   transformer derives the page's **catalog**: every field the current user
+   may read, as `{id, title, kind, value, input}` rows in schema order. The
+   value is already reduced to its display kind and formatted for the
+   request's locale. `input` names the inline control the editor draws, or
+   is empty for a field the user may not write. The catalog is injected into
+   the block data as `catalog`.
 2. On save, a matching deserialization transformer strips `catalog` again,
-   so it is never written to the database and can never go stale.
+   so it is never persisted and cannot go stale.
 3. The renderers read the chosen fields out of the catalog and print them.
    They format nothing themselves.
 
-The whole catalog is injected rather than only the chosen fields. This keeps
-the derived data independent of the stored choices, so picking a field in
-the sidebar updates the preview instantly, and it is what fills the sidebar's
-field select. Every Metadata block on a page shares one derivation per
-request.
+The whole catalog is injected, not only the chosen fields, so picking a field
+in the sidebar updates the preview without a round trip. It also fills the
+sidebar's field select. A freshly inserted block has no catalog yet. The
+editor fetches one from the page's `@metadata-catalog` REST endpoint, which
+this package adds.
 
-A freshly inserted block has no catalog yet. The editor canvas fetches one
-from the page's `@metadata-catalog` REST endpoint, which this package adds
-and which returns exactly what the transformer injects, once per page load,
-and previews from that.
-
-Inline editing rides the host's own machinery: the canvas binds each
-editable field to the editor's form atom with the same `useFieldFocusedAtom`
-hook Aurora's title node uses, and the Blicca wrapper's save carries every
-field of that atom the canvas changed next to the blocks (block add-on
-contract §1.7). Each control sits in a `<div class="metadata-control">`
-inside the value element and writes the shape the content PATCH takes back
-(a token, a list of tags, an ISO date, `{ '@id' }` rows, a base64 upload —
-the image control previewing the picked file from that same data URL);
-the wrapper stops keyboard and clipboard events so the editor's own
-handlers never see them. Dates use the host's `datetime` widget and related
-items the host's `object_browser`; everything else is a native element. The
-public page never carries any of it.
+Inline editing binds each editable field to the editor's form state, the
+same way Aurora's own title node does. Saving the page sends the edited
+fields together with the blocks.
 
 The transformers are registered for content with the `IBlocks` behavior and
-for the site root, so a block stored on the site root (a footer) shows the
-site root's fields on every page.
+for the site root, so a block stored on the site root shows the site root's
+fields on every page.
 
-There are two renderers per block that produce the same markup: a Chameleon
-template, registered as the `@@aurora-block-metadata` and
-`@@aurora-block-metadataSection` views, for the public page rendered by
-Blicca; and a React `view` component, used for the preview in the editor
-canvas and for the public rendering in an Aurora frontend. One
-`@scope`-wrapped stylesheet styles both. A shared fixture file,
-`tests/anatomy-cases.json`, is read by the Python test suite and the vitest
-suite alike, so the renderers cannot drift apart unnoticed.
+Two renderers emit the same markup: Chameleon templates registered as the
+`@@aurora-block-metadata` and `@@aurora-block-metadataSection` views for the
+public page, and React `view` components for the editor canvas and for
+Aurora frontends. Both read the shared fixture `tests/anatomy-cases.json` in
+their test suites, so they cannot drift apart unnoticed.
 
-Link and image URLs are screened against an allowlist of schemes (`http`,
-`https`, `mailto`, `tel`, or a plain path), because the block data travels
-inside JSON that anyone with API access can write. Rich text is emitted as
-HTML: it is the field's own output transform, and a hand-authored catalog is
-replaced by the server's on every load.
+Link and image URLs must be a plain path or use `http`, `https`, `mailto` or
+`tel`, because block data travels in JSON that anyone with API access can
+write.
 
 ## Theming
 
-The blocks are styled through twenty-one CSS custom properties. Set them on
-`:root` or on your theme's own scope root, where they inherit into the
-blocks. Do not set them on `.metadata-block` itself and do not override the
-blocks' rules directly: the stylesheet is `@scope`-wrapped, and a scoped
-declaration wins over an unscoped one of equal specificity.
+Twenty-one CSS custom properties are the whole styling interface. Set them
+on `:root`; they inherit into the blocks. Do not override the blocks' rules
+directly: the stylesheet is `@scope`-wrapped, and a scoped declaration wins
+over an unscoped one of equal specificity.
 
 The blocks declare none of these properties. Every default is spelled at its
 point of use as `var(--metadata-x, <default>)`, so a value set on `:root`
-inherits in and wins without any specificity games.
+inherits in and wins without specificity games.
 
 | property | default | what it controls |
 |---|---|---|
@@ -327,71 +246,55 @@ Example, a quiet fact box:
 
 Notes:
 
-- The padding defaults to `0` because the host's background band already
-  pads the block.
-- A text value keeps its line breaks (`white-space: pre-line`), so a
-  multi-line description renders as written.
-- The blocks set no focus outline, so the host's own `:focus-visible` style
+- The padding defaults to `0` because the editor's block wrapper already
+  pads a block with a background colour.
+- A text value keeps its line breaks (`white-space: pre-line`).
+- The blocks set no focus outline, so your own `:focus-visible` style
   reaches the links and the tags.
-- A tag is an outlined pill rather than an underlined link, the anatomy of
-  Plone's keywords viewlet in the blocks' own classes. It carries no hover
-  rule of its own, so the theme's link hover reaches it.
+- A tag is an outlined pill with no hover rule of its own, so your link
+  hover reaches it.
 
-Versioning of this interface: adding a property is a minor release. Removing
-or renaming a property, or changing a default, is a breaking change.
+Adding a property is a minor release. Removing or renaming a property, or
+changing a default, is a breaking change.
 
 ## Using the blocks in Aurora
 
 The editor half lives in `bundle-src/` as the npm package
 `@derico/aurora-metadata-block` (not yet published). It registers both
-blocks and their six sidebar widgets through the usual `install(config)`
-entry point and uses only upstream Aurora widgets besides, so it works
-without the Blicca wrapper.
-
-Things to know when using it in an Aurora frontend:
+blocks and their sidebar widgets through the usual `install(config)` entry
+point and uses only upstream Aurora widgets.
 
 - **The Python package must still be installed on the backend.** The React
   `view`s read the `catalog` the server injects, and the sidebar's field
-  select is filled from it. Without the backend add-on the blocks render
-  their empty roots.
-- **Inline editing works.** The blocks bind the `formAtom` utility
-  `@plone/cmsui` registers, and Aurora's form persists every field. Related
-  items are the exception: Aurora's own `object_browser` needs a router
-  loader the canvas does not provide, so that control is proven under
-  Blicca only.
+  select is filled from it. Without it the blocks render empty roots.
+- **Inline editing works,** except for related items: Aurora's own
+  `object_browser` needs a router loader the canvas does not provide.
 - **The editor preview of a new block is anonymous.** The fallback fetch of
   `@metadata-catalog` is a plain same-origin `fetch`. Under Blicca the
   session cookie authenticates it. In Aurora the API token does not reach
   it, so a private page previews nothing until the block is saved and
   reloaded.
 - **Bring your own styling.** The stylesheet is scoped to the Blicca roots
-  and does not apply in an Aurora frontend. The sidebar's notices are the
-  one thing that still comes out dressed: they carry cmsui's own description
-  utilities, so they read like the rest of the panel there, and lose only
-  the rule the stylesheet draws beside them.
+  and does not apply in an Aurora frontend.
 
 ## Development
 
-The package has a Python half and a JavaScript half. The JavaScript build
-output is committed into `src/derico/blicca/metadatablock/static/`; rebuild
-and commit it whenever the sources in `bundle-src/src/` change.
+The JavaScript build output is committed into
+`src/derico/blicca/metadatablock/static/`. Rebuild and commit it whenever
+`bundle-src/src/` changes.
 
 ```bash
-# JavaScript: the blocks, their widgets and the stylesheet
 cd bundle-src
 pnpm install
 pnpm build        # writes ../src/derico/blicca/metadatablock/static/metadata-block.{js,css}
-pnpm test         # the tests read the built bundle, so build first
+pnpm test         # reads the built bundle, so build first
 pnpm typecheck
 ```
 
 ```bash
-# Python, from an environment that has the test extras installed
-uv run pytest
+uv run --extra test pytest
 ```
 
-The JavaScript tests run the blocks against the real Aurora registry, built
-by the upstream Aurora installers pinned as dev dependencies. Among them,
 `test/seam-lockstep.test.ts` checks that the property table in this README
 matches the stylesheet literally, so keep the two in step.
 
