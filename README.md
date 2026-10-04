@@ -1,10 +1,11 @@
 # derico.blicca.metadatablock
 
-Two **Metadata blocks** for the Aurora block editor in Plone 6. They show a
-page's own fields inside its blocks area: title, description, tags, dates,
-lead image, related items, or any other field of the content type. The
-**Metadata** block shows one field. The **Metadata section** block shows
-several, as a list or as a table.
+Two **Metadata** blocks for the Aurora editor in [Plone](https://plone.org) Blicca.
+Blicca is the former Plone Classic UI. The blocks show a page's own fields
+inside its blocks area: title, description, tags, dates, lead image, related
+items, or any other field of the content type. The **Metadata** block shows
+one field. The **Metadata section** block shows several, as a list or as a
+table.
 
 Typical uses:
 
@@ -13,10 +14,10 @@ Typical uses:
 - a fact box: event dates, contact, state, related pages, in one table;
 - an author box built from the ownership fields.
 
-The blocks run under [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
-which brings the Aurora editor to Blicca, Plone's server-rendered UI
-(formerly Classic UI). The editor half is also a plain Aurora block package,
-`@derico/aurora-metadata-block`, see
+The blocks need [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
+which brings the Aurora editor to Blicca. Their editor half is also a plain
+Aurora block package, `@derico/aurora-metadata-block`, that can be used in an
+Aurora frontend directly, see
 [Using the blocks in Aurora](#using-the-blocks-in-aurora).
 
 The blocks are inspired by
