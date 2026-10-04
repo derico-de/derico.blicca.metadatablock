@@ -13,7 +13,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      BLICCA_TOKEN: ${{ secrets.BLICCA_TOKEN }}
+      BLICCA_SSH_KEY: ${{ secrets.BLICCA_SSH_KEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -23,12 +23,13 @@ jobs:
       # plone.blicca.auroraeditor is PRIVATE and not on PyPI: it is the editor
       # this block mounts in and the source of the rendering API the package
       # imports, so without it nothing installs and nothing is tested. A
-      # missing token is a red job on purpose — a green run over a package
-      # that could not be installed says nothing.
-      - name: Require the host checkout token
-        if: env.BLICCA_TOKEN == ''
+      # missing key is a red job on purpose — a green run over a package
+      # that could not be installed says nothing. Use a read-only deploy key
+      # scoped to the host repository, not a personal access token.
+      - name: Require the host checkout key
+        if: env.BLICCA_SSH_KEY == ''
         run: |
-          echo "::error::BLICCA_TOKEN is not set. This package depends on"
+          echo "::error::BLICCA_SSH_KEY is not set. This package depends on"
           echo "::error::plone.blicca.auroraeditor, which is private and not"
           echo "::error::on PyPI, so the tests cannot run."
           exit 1
@@ -43,7 +44,8 @@ jobs:
       - uses: actions/checkout@v5
         with:
           repository: derico-de/plone.blicca.auroraeditor
-          token: ${{ env.BLICCA_TOKEN }}
+          ssh-key: ${{ env.BLICCA_SSH_KEY }}
+          persist-credentials: false
           path: plone.blicca.auroraeditor
 
       - name: Set up uv and Python ${{ matrix.python-version }}
