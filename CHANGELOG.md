@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0a1 (unreleased)
+## 1.0.0a1 (2026-10-04)
 
 - The uninstall and upgrade profiles are out of the Add-ons control panel
   again. `HiddenProfiles` named them all along, but the `INonInstallable`
