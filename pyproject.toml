@@ -1,6 +1,6 @@
 [project]
 name = "derico.blicca.metadatablock"
-version = "1.0.0a1"
+version = "1.0.0a2.dev0"
 description = "Aurora Metadata blocks: show the content item's own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
 readme = "README.md"
 requires-python = ">=3.10"
