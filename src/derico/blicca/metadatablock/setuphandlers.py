@@ -21,6 +21,7 @@ class HiddenProfiles:
             "derico.blicca.metadatablock:uninstall",
             "derico.blicca.metadatablock.upgrades:1001",
             "derico.blicca.metadatablock.upgrades:1002",
+            "derico.blicca.metadatablock.upgrades:1003",
         ]
 
 

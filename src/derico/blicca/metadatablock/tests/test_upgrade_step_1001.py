@@ -33,11 +33,8 @@ DEFAULT_REGISTRY = PACKAGE / "profiles" / "default" / "registry.xml"
 UPGRADE_REGISTRY = PACKAGE / "upgrades" / "1001" / "registry.xml"
 
 
-def normalized(path, ignore=()):
-    """The XML's structure, stripped of comments and whitespace.
-
-    `<value>` nodes whose key is in `ignore` are left out.
-    """
+def normalized(path):
+    """The XML's structure, stripped of comments and whitespace."""
 
     def walk(elem):
         text = (elem.text or "").strip()
@@ -45,11 +42,7 @@ def normalized(path, ignore=()):
             elem.tag,
             tuple(sorted(elem.attrib.items())),
             text,
-            tuple(
-                walk(child)
-                for child in elem
-                if not (child.tag == "value" and child.get("key") in ignore)
-            ),
+            tuple(walk(child) for child in elem),
         )
 
     # S314: the two files parsed here are this package's own committed
@@ -120,3 +113,29 @@ class TestUpgrade1001:
         for name in RECORDS:
             assert block_addon_records()[name].bundle.endswith("/metadata-block.js")
             assert statuses[name].loadable
+
+
+class TestUpgradeProfilesHidden:
+    """Every upgrade profile stays out of the add-ons control panel.
+
+    `plonecli add upgrade_step` registers a new EXTENSION profile but does
+    not add it to `HiddenProfiles`, so checking every registered
+    `derico.blicca.metadatablock.upgrades:*` profile, not just one by name,
+    means a later scaffolded step that forgets to hide itself fails here
+    instead of showing up in the control panel.
+    """
+
+    @pytest.fixture(autouse=True)
+    def _setup(self, integration):
+        self.portal = integration["portal"]
+        self.setup_tool = api.portal.get_tool("portal_setup")
+
+    def test_every_upgrade_profile_is_non_installable(self):
+        hidden = set(hidden_profiles())
+        registered = {
+            info["id"]
+            for info in self.setup_tool.listProfileInfo()
+            if info["id"].startswith("derico.blicca.metadatablock.upgrades:")
+        }
+        assert registered, "no upgrade profile is registered at all"
+        assert registered <= hidden
