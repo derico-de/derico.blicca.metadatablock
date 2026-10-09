@@ -19,7 +19,7 @@
          records import keeps every other field of the existing records. -->
     <genericsetup:upgradeDepends
         title="Declare block-api 2.0 on the metadata block records"
-        description="The Plate 53 host stamps block-api 2.0; a 1.x declaration is skipped."
+        description="Historical: declared block-api 2.0 for the Plate 53 host. block_api is retired (ADR 0024), so this step now imports an empty registry.xml and only keeps the upgrade chain intact."
         import_profile="derico.blicca.metadatablock.upgrades:1002"
         import_steps="plone.app.registry"
         />

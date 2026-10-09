@@ -25,9 +25,11 @@ keywords = ["Plone", "CMS"]
 
 dependencies = [
     "Plone>=6.0",
-    # The blocks import plone.blicca.auroraeditor.rendering, which is versioned by
-    # this distribution and NOT by the block-api number the registry records declare.
-    "plone.blicca.auroraeditor>=1.0.0a2",
+    # The blocks import plone.blicca.auroraeditor.rendering, versioned by this
+    # distribution. 1.0.0a4 also retired `block_api` from IAuroraBlockAddon
+    # (ADR 0024); an older editor would read these records' missing
+    # declaration as incompatible.
+    "plone.blicca.auroraeditor>=1.0.0a4",
 ]
 
 [project.optional-dependencies]
