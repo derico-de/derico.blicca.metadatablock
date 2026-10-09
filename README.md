@@ -59,7 +59,7 @@ and `metadataSection`.
 ## Requirements
 
 - Plone 6.0 or later
-- `plone.blicca.auroraeditor` 1.0.0a2 or later
+- `plone.blicca.auroraeditor` 1.0.0a4 or later
 
 The JavaScript bundle is committed to the package. No Node is needed at
 install time.

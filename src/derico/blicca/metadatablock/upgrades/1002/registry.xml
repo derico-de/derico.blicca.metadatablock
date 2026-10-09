@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <registry>
+  <!-- block_api is retired (ADR 0024): this step declared block-api 2.0 on
+       both records and now has nothing left to import. Kept as a no-op so
+       a site at 1001 still reaches 1002 in the upgrade chain. -->
   <records
       interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
       prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadata"
       >
-    <value key="block_api">2.0</value>
   </records>
   <records
       interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
       prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadataSection"
       >
-    <value key="block_api">2.0</value>
   </records>
 </registry>

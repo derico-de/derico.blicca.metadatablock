@@ -3,9 +3,9 @@
 The install profile is what makes the committed bundle reachable at all: the
 JS can be perfect and the blocks still never appear, because ``@@aurora-edit``
 discovers add-ons per site through ``IAuroraBlockAddon`` records and gates
-each one on *enabled*, *bundle resolves* and *block-api compatible*. Every
-gate is asserted here rather than assumed, for both records, and uninstall is
-asserted to undo exactly what install did.
+each one on *enabled*, *bundle resolves* and *no missing imported names*.
+Every gate is asserted here rather than assumed, for both records, and
+uninstall is asserted to undo exactly what install did.
 """
 
 import pytest
@@ -68,14 +68,8 @@ class TestSetup:
         assert not getattr(record, "permission", "")
 
     @pytest.mark.parametrize("name", RECORDS)
-    def test_blockaddon_record_declares_the_api_floor(self, name):
-        record = block_addon_records()[name]
-        assert record.block_api == "2.0"
-        assert blockaddons.is_compatible(record.block_api, blockaddons.host_block_api())
-
-    @pytest.mark.parametrize("name", RECORDS)
     def test_addon_loadable_by_wrapper(self, name):
-        """Record present, bundle resolves, block-api compatible."""
+        """Record present, bundle resolves, no imported name missing."""
         statuses = {s.name: s for s in blockaddons.evaluate(self.portal)}
         status = statuses[name]
         assert status.skip_reason is None

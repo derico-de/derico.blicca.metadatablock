@@ -78,10 +78,7 @@ def hidden_profiles():
 
 class TestUpgradeProfileParity:
     def test_upgrade_registry_matches_the_default_profile(self):
-        # Except `block_api`: 1002 moved it on to 2.0, and its test holds that.
-        assert normalized(UPGRADE_REGISTRY, ignore={"block_api"}) == normalized(
-            DEFAULT_REGISTRY, ignore={"block_api"}
-        )
+        assert normalized(UPGRADE_REGISTRY) == normalized(DEFAULT_REGISTRY)
 
 
 class TestUpgrade1001:
@@ -117,7 +114,7 @@ class TestUpgrade1001:
         self.setup_tool.upgradeProfile(PROFILE, dest="1001")
 
         assert self.setup_tool.getLastVersionForProfile(PROFILE) == ("1001",)
-        # Loadable once 1002 declared block-api 2.0, too.
+        # Loadable all the way to the current profile version, too.
         self.setup_tool.upgradeProfile(PROFILE)
         statuses = {s.name: s for s in blockaddons.evaluate(self.portal)}
         for name in RECORDS:

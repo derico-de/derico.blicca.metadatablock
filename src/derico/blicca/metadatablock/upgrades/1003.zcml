@@ -1,0 +1,26 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    xmlns:genericsetup="http://namespaces.zope.org/genericsetup"
+    i18n_domain="derico.blicca.metadatablock">
+
+  <genericsetup:registerProfile
+      name="1003"
+      title="derico.blicca.metadatablock: upgrade to 1003"
+      directory="1003"
+      provides="Products.GenericSetup.interfaces.EXTENSION"
+      />
+
+  <genericsetup:upgradeSteps
+      source="1002"
+      destination="1003"
+      profile="derico.blicca.metadatablock:default">
+
+    <genericsetup:upgradeStep
+        title="Delete the block_api records"
+        description="Block add-ons are checked by the names their bundles import (ADR 0024 in plone.blicca.auroraeditor): delete the orphaned block_api records under plone.blicca.auroraeditor.blockaddons."
+        handler=".v1003.upgrade"
+        />
+
+  </genericsetup:upgradeSteps>
+
+</configure>
