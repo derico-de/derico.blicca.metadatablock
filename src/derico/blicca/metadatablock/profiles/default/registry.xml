@@ -29,8 +29,9 @@
 
     <!-- The FLOOR the block needs, not the host's current version. A §2.4
          mismatch is a fail-soft skip: the block silently vanishes from the
-         slash menu. "1.0" is the most permissive compatible declaration. -->
-    <value key="block_api">1.0</value>
+         slash menu. "2.0" is the most permissive declaration a 2.x host
+         accepts. -->
+    <value key="block_api">2.0</value>
 
     <!-- The scope-wrapped sheet that dresses BOTH surfaces: the wrapper links
          it in the head of the edit page and of the public blocks view alike. -->
@@ -52,7 +53,7 @@
       prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadataSection"
       >
     <value key="bundle">++plone++derico.blicca.metadatablock/metadata-block.js</value>
-    <value key="block_api">1.0</value>
+    <value key="block_api">2.0</value>
     <value key="css">++plone++derico.blicca.metadatablock/metadata-block.css</value>
     <value key="types">
       <element>metadataSection</element>

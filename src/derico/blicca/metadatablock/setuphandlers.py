@@ -20,6 +20,7 @@ class HiddenProfiles:
         return [
             "derico.blicca.metadatablock:uninstall",
             "derico.blicca.metadatablock.upgrades:1001",
+            "derico.blicca.metadatablock.upgrades:1002",
         ]
 
 

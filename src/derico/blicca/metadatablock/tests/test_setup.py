@@ -70,7 +70,7 @@ class TestSetup:
     @pytest.mark.parametrize("name", RECORDS)
     def test_blockaddon_record_declares_the_api_floor(self, name):
         record = block_addon_records()[name]
-        assert record.block_api == "1.0"
+        assert record.block_api == "2.0"
         assert blockaddons.is_compatible(record.block_api, blockaddons.host_block_api())
 
     @pytest.mark.parametrize("name", RECORDS)

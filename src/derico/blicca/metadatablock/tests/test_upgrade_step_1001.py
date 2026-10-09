@@ -33,8 +33,11 @@ DEFAULT_REGISTRY = PACKAGE / "profiles" / "default" / "registry.xml"
 UPGRADE_REGISTRY = PACKAGE / "upgrades" / "1001" / "registry.xml"
 
 
-def normalized(path):
-    """The XML's structure, stripped of comments and whitespace."""
+def normalized(path, ignore=()):
+    """The XML's structure, stripped of comments and whitespace.
+
+    `<value>` nodes whose key is in `ignore` are left out.
+    """
 
     def walk(elem):
         text = (elem.text or "").strip()
@@ -42,7 +45,11 @@ def normalized(path):
             elem.tag,
             tuple(sorted(elem.attrib.items())),
             text,
-            tuple(walk(child) for child in elem),
+            tuple(
+                walk(child)
+                for child in elem
+                if not (child.tag == "value" and child.get("key") in ignore)
+            ),
         )
 
     # S314: the two files parsed here are this package's own committed
@@ -71,7 +78,10 @@ def hidden_profiles():
 
 class TestUpgradeProfileParity:
     def test_upgrade_registry_matches_the_default_profile(self):
-        assert normalized(UPGRADE_REGISTRY) == normalized(DEFAULT_REGISTRY)
+        # Except `block_api`: 1002 moved it on to 2.0, and its test holds that.
+        assert normalized(UPGRADE_REGISTRY, ignore={"block_api"}) == normalized(
+            DEFAULT_REGISTRY, ignore={"block_api"}
+        )
 
 
 class TestUpgrade1001:
@@ -107,6 +117,8 @@ class TestUpgrade1001:
         self.setup_tool.upgradeProfile(PROFILE, dest="1001")
 
         assert self.setup_tool.getLastVersionForProfile(PROFILE) == ("1001",)
+        # Loadable once 1002 declared block-api 2.0, too.
+        self.setup_tool.upgradeProfile(PROFILE)
         statuses = {s.name: s for s in blockaddons.evaluate(self.portal)}
         for name in RECORDS:
             assert block_addon_records()[name].bundle.endswith("/metadata-block.js")
