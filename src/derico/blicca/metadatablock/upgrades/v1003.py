@@ -2,10 +2,9 @@
 
 import logging
 
+from plone.blicca.auroraeditor.blockaddons import BLOCKADDON_PREFIX
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
-
-from plone.blicca.auroraeditor.blockaddons import BLOCKADDON_PREFIX
 
 
 logger = logging.getLogger(__name__)
