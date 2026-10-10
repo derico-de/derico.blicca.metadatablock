@@ -22,11 +22,10 @@ describe('install()', () => {
     expect(upstream.blocks.blocksConfig.metadataSection).toBe(MetadataSectionBlockInfo);
   });
 
-  it('registers the six namespaced widgets, and only those', () => {
+  it('registers the five namespaced widgets, and only those', () => {
     install(upstream);
     expect(Object.keys(METADATA_WIDGETS).sort()).toEqual(
       [
-        'metadata_boolean',
         'metadata_field',
         'metadata_fields',
         'metadata_notice',
@@ -39,7 +38,7 @@ describe('install()', () => {
     }
     // The generic keys stay unclaimed: claiming one would change every other
     // block's fields in the host.
-    for (const key of ['select', 'textarea', 'object_list']) {
+    for (const key of ['select', 'textarea', 'object_list', 'metadata_boolean']) {
       expect(upstream.getWidget(key)).toBeUndefined();
     }
   });

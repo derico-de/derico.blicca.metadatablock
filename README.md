@@ -101,6 +101,10 @@ Uninstalling removes the registrations again.
 5. Under **Fields**, add the fields to show, in order, each with its own
    *Show label* switch. The table layout always shows the title.
 
+A block whose **Show in view** was never touched shows its fields. Its
+checkbox shows that with `plone.blicca.auroraeditor` later than 1.0.0a4;
+older versions show it unchecked until the author sets it.
+
 Only these choices are stored with the page. The values come from the page
 on every load. The editor previews them as *you* see them, and a field the
 current user may not read is not offered. An empty field renders nothing, or
@@ -268,6 +272,10 @@ point and uses only upstream Aurora widgets.
 - **The Python package must still be installed on the backend.** The React
   `view`s read the `catalog` the server injects, and the sidebar's field
   select is filled from it. Without it the blocks render empty roots.
+- **Show in view** and **Show label** are plain `boolean` fields, drawn
+  by the host's checkbox widget. Aurora's own, Quanta's `Checkbox`, does not
+  take the label and stored value the block sidebar passes yet, so there
+  they show unlabelled and unchecked.
 - **Inline editing works,** except for related items: Aurora's own
   `object_browser` needs a router loader the canvas does not provide.
 - **The editor preview of a new block is anonymous.** The fallback fetch of

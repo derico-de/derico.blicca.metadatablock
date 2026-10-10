@@ -40,9 +40,15 @@ describe('the Metadata block', () => {
 
   it('names namespaced widgets, so both hosts render the same controls', () => {
     expect(schema.properties.field.widget).toBe('metadata_field');
-    expect(schema.properties.showInView.widget).toBe('metadata_boolean');
-    expect(schema.properties.showLabel.widget).toBe('metadata_boolean');
     expect(schema.properties.metadataNotice.widget).toBe('metadata_notice');
+  });
+
+  it("switches its flags through the host's boolean widget", () => {
+    for (const name of ['showInView', 'showLabel'] as const) {
+      const flag = schema.properties[name] as any;
+      expect(flag.type).toBe('boolean');
+      expect(flag.widget).toBeUndefined();
+    }
   });
 
   it('offers “Show in view” on by default, which is what both renderers assume', () => {
@@ -93,7 +99,8 @@ describe('the Metadata Section block', () => {
   });
 
   it('offers “Show in view” on by default, exactly as the single block does', () => {
-    expect(schema.properties.showInView.widget).toBe('metadata_boolean');
+    expect(schema.properties.showInView.type).toBe('boolean');
+    expect((schema.properties.showInView as any).widget).toBeUndefined();
     expect(schema.properties.showInView.default).toBe(true);
     expect(showInView({ fields: [{ field: 'title' }] })).toBe(true);
     expect(showInView({ fields: [{ field: 'title' }], showInView: false })).toBe(false);

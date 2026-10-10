@@ -61,8 +61,8 @@ describe.each([
     {
       metadataNotice: 'ours',
       field: 'ours',
-      showInView: 'ours',
-      showLabel: 'ours',
+      showInView: 'upstream',
+      showLabel: 'upstream',
       placeholder: 'default',
       blockWidth: 'upstream',
     },
@@ -73,7 +73,7 @@ describe.each([
     {
       metadataNotice: 'ours',
       title: 'default',
-      showInView: 'ours',
+      showInView: 'upstream',
       layout: 'ours',
       fields: 'ours',
       blockWidth: 'upstream',

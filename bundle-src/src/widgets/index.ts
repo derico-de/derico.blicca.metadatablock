@@ -1,5 +1,5 @@
 /**
- * The Metadata blocks' six sidebar widgets and their registration.
+ * The Metadata blocks' five sidebar widgets and their registration.
  *
  * Every key is **namespaced**. `registerWidget` writes into one global
  * last-wins map, so a block claiming a generic key (`select`, `boolean`,
@@ -7,13 +7,11 @@
  * 'widget'` puts them where `Field.tsx`'s `getWidgetByName` looks — the lane
  * a schema selects with `widget: 'metadata_field'`.
  */
-import { MetadataBooleanWidget } from './BooleanWidget';
 import { MetadataFieldWidget } from './FieldSelectWidget';
 import { MetadataFieldsWidget } from './FieldsWidget';
 import { MetadataNoticeWidget, MetadataSectionNoticeWidget } from './NoticeWidget';
 import { MetadataSelectWidget } from './SelectWidget';
 
-export { MetadataBooleanWidget } from './BooleanWidget';
 export { MetadataFieldWidget } from './FieldSelectWidget';
 export { MetadataFieldsWidget } from './FieldsWidget';
 export { MetadataNoticeWidget, MetadataSectionNoticeWidget } from './NoticeWidget';
@@ -28,7 +26,6 @@ export const METADATA_WIDGETS = {
   metadata_field: MetadataFieldWidget,
   metadata_fields: MetadataFieldsWidget,
   metadata_select: MetadataSelectWidget,
-  metadata_boolean: MetadataBooleanWidget,
   metadata_notice: MetadataNoticeWidget,
   metadata_section_notice: MetadataSectionNoticeWidget,
 } as const;

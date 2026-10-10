@@ -1,11 +1,10 @@
 /**
- * The four sidebar widgets: labelled, associated, and storing exactly the
+ * The three sidebar widgets: labelled, associated, and storing exactly the
  * shapes the renderers read.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 
-import { MetadataBooleanWidget } from '../src/widgets/BooleanWidget';
 import { MetadataFieldWidget } from '../src/widgets/FieldSelectWidget';
 import { MetadataFieldsWidget } from '../src/widgets/FieldsWidget';
 import { MetadataSelectWidget } from '../src/widgets/SelectWidget';
@@ -33,33 +32,6 @@ describe('metadata_select', () => {
   it('keeps a stored value outside the choices', () => {
     render(<MetadataSelectWidget label="Layout" choices={[['list', 'List']]} value="grid" />);
     expect((screen.getByLabelText('Layout') as HTMLSelectElement).value).toBe('grid');
-  });
-});
-
-describe('metadata_boolean', () => {
-  it('stores a real boolean', () => {
-    const onChange = vi.fn();
-    render(<MetadataBooleanWidget label="Show label" value={false} onChange={onChange} />);
-    const box = screen.getByLabelText('Show label') as HTMLInputElement;
-    expect(box.checked).toBe(false);
-    fireEvent.click(box);
-    expect(onChange).toHaveBeenCalledWith(true);
-  });
-
-  it('treats anything but true as unchecked', () => {
-    render(<MetadataBooleanWidget label="Show label" value={'yes' as any} />);
-    expect((screen.getByLabelText('Show label') as HTMLInputElement).checked).toBe(false);
-  });
-
-  it('shows the schema default while nothing is stored, without storing it', () => {
-    const onChange = vi.fn();
-    render(<MetadataBooleanWidget label="Show in view" default onChange={onChange} />);
-    expect((screen.getByLabelText('Show in view') as HTMLInputElement).checked).toBe(true);
-    expect(onChange).not.toHaveBeenCalled();
-    cleanup();
-    // A stored value outranks it, false included.
-    render(<MetadataBooleanWidget label="Show in view" defaultValue={false} default />);
-    expect((screen.getByLabelText('Show in view') as HTMLInputElement).checked).toBe(false);
   });
 });
 
