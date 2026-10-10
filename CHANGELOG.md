@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0a3 (unreleased)
+## 1.0.0a3 (2026-10-10)
 
 - Drop the retired `block_api` from the Metadata block records; needs
   plone.blicca.auroraeditor 1.0.0a4 (upgrade step 1003 deletes left-over
