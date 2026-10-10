@@ -126,9 +126,7 @@ class TestCatalog:
                 {"id": "ok", "kind": "text"},
             ]
         })
-        assert rows == [
-            {"id": "ok", "title": "", "kind": "text", "value": None, "input": ""}
-        ]
+        assert rows == [{"id": "ok", "title": "", "kind": "text", "value": None, "input": ""}]
 
     def test_keeps_an_input_it_knows_and_drops_one_it_does_not(self):
         rows = metadata_data.catalog({

@@ -364,9 +364,7 @@ class TestInputs(CatalogTestCase):
 
         schema = next(s for s in iterSchemata(self.doc) if "description" in s)
         tagged = dict(schema.queryTaggedValue(WRITE_PERMISSIONS_KEY) or {})
-        schema.setTaggedValue(
-            WRITE_PERMISSIONS_KEY, {**tagged, "description": "cmf.ManagePortal"}
-        )
+        schema.setTaggedValue(WRITE_PERMISSIONS_KEY, {**tagged, "description": "cmf.ManagePortal"})
         try:
             api.user.create(email="e@example.org", username="editor", password="secret123")
             api.user.grant_roles(username="editor", obj=self.doc, roles=["Editor"])
