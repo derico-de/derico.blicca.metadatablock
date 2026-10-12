@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0a4 (unreleased)
+## 1.0.0a4 (2026-10-12)
 
 - **Show in view** and **Show label** are plain `boolean` fields, drawn by
   the host's checkbox widget; the block's own `metadata_boolean` widget is
