@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0a5 (unreleased)
+
+
+- Nothing changed yet.
+
+
 ## 1.0.0a4 (2026-10-12)
 
 - **Show in view** and **Show label** are plain `boolean` fields, drawn by
