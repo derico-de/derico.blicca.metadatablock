@@ -767,7 +767,7 @@ function MetadataSchema({ formData = {} } = {}) {
       showInView: {
         title: "Show in view",
         description: "Off, the field is only edited here and never shown on the page.",
-        widget: "metadata_boolean",
+        type: "boolean",
         // NOT a storage guarantee — both renderers read an absent value as
         // `true` themselves, so a block authored before the setting existed
         // still renders.
@@ -776,7 +776,7 @@ function MetadataSchema({ formData = {} } = {}) {
       showLabel: {
         title: "Show label",
         description: "Put the field’s title above its value.",
-        widget: "metadata_boolean"
+        type: "boolean"
       },
       placeholder: {
         title: "Placeholder",
@@ -811,7 +811,7 @@ function MetadataSectionSchema({ formData = {} } = {}) {
       showInView: {
         title: "Show in view",
         description: "Off, the fields are only edited here and never shown on the page.",
-        widget: "metadata_boolean",
+        type: "boolean",
         // NOT a storage guarantee — both renderers read an absent value as
         // `true` themselves, so a block authored before the setting existed
         // still renders.
@@ -854,31 +854,6 @@ function FieldShell({
         render(controlId),
         description ? /* @__PURE__ */ jsx("p", { className: "text-xs font-normal text-quanta-pigeon", children: description }) : null
       ]
-    }
-  );
-}
-function MetadataBooleanWidget(props) {
-  const { description, className, onChange } = props;
-  const checked = (props.value ?? props.defaultValue ?? props.default) === true;
-  return /* @__PURE__ */ jsx(
-    FieldShell,
-    {
-      blockClass: "metadata-boolean-widget",
-      description,
-      className,
-      render: (controlId) => /* @__PURE__ */ jsxs("label", { htmlFor: controlId, className: `${labelClass} flex items-center gap-2`, children: [
-        /* @__PURE__ */ jsx(
-          "input",
-          {
-            id: controlId,
-            type: "checkbox",
-            name: props.name,
-            checked,
-            onChange: (event) => onChange?.(event.target.checked)
-          }
-        ),
-        props.label
-      ] })
     }
   );
 }
@@ -1105,7 +1080,6 @@ const METADATA_WIDGETS = {
   metadata_field: MetadataFieldWidget,
   metadata_fields: MetadataFieldsWidget,
   metadata_select: MetadataSelectWidget,
-  metadata_boolean: MetadataBooleanWidget,
   metadata_notice: MetadataNoticeWidget,
   metadata_section_notice: MetadataSectionNoticeWidget
 };

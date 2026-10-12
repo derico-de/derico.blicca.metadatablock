@@ -2,6 +2,10 @@
 
 ## 1.0.0a4 (unreleased)
 
+- **Show in view** and **Show label** are plain `boolean` fields, drawn by
+  the host's checkbox widget; the block's own `metadata_boolean` widget is
+  gone. Stored values are unchanged.
+
 - pre-commit leaves build output and scaffold metadata alone, and the code
   is ruff-formatted.
 

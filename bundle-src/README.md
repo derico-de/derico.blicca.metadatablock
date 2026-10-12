@@ -47,9 +47,9 @@ filesystem it cannot lock — use `pnpm install --store-dir /dev/shm/pnpm-store`
 - `src/metadata/MetadataEdit.tsx`, `MetadataSectionEdit.tsx` — the views
   plus the notices.
 - `src/metadata/schema.ts` — the two sidebar forms.
-- `src/widgets/` — `metadata_field`, `metadata_fields`, `metadata_select`,
-  `metadata_boolean`: namespaced widgets so every control is the same in
-  both hosts.
+- `src/widgets/` — `metadata_field`, `metadata_fields`, `metadata_select`:
+  namespaced widgets so every control is the same in both hosts. The flags
+  are plain `boolean` fields, drawn by the host's checkbox.
 - `src/styles.css` — the one stylesheet, scope-wrapped by the build.
 
 `vite.config.ts` and `build-plugins/scope-wrap.ts` are the canonical block

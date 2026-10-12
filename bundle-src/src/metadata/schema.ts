@@ -9,13 +9,11 @@
  *    its fieldset. The only conditional field is the background, and it is
  *    last.
  *
- * Every non-text field names a NAMESPACED widget of this package
- * (`metadata_field`, `metadata_fields`, `metadata_select`,
- * `metadata_boolean`): `getWidgetByName` outranks every other lane in
- * `Field.tsx`, and the `choices` / `boolean` lanes differ between the two
- * hosts — Aurora registers no `choices` widget at all, and its `boolean`
- * widget takes different props than Blicca's substitute. A namespaced widget
- * is the same control in both hosts.
+ * The field pickers and the layout select name a NAMESPACED widget of this
+ * package (`metadata_field`, `metadata_fields`, `metadata_select`):
+ * `getWidgetByName` outranks every other lane in `Field.tsx`, and Aurora
+ * registers no `choices` widget at all. The flags are plain `boolean`
+ * fields, drawn by the host's checkbox widget.
  *
  * The field widgets need the catalog to offer the page's fields: the
  * serializer's `catalog` on the node is passed through as a widget prop, and
@@ -108,7 +106,7 @@ export function MetadataSchema({ formData = {} }: SchemaArgs = {}) {
       showInView: {
         title: 'Show in view',
         description: 'Off, the field is only edited here and never shown on the page.',
-        widget: 'metadata_boolean',
+        type: 'boolean',
         // NOT a storage guarantee — both renderers read an absent value as
         // `true` themselves, so a block authored before the setting existed
         // still renders.
@@ -117,7 +115,7 @@ export function MetadataSchema({ formData = {} }: SchemaArgs = {}) {
       showLabel: {
         title: 'Show label',
         description: 'Put the field’s title above its value.',
-        widget: 'metadata_boolean',
+        type: 'boolean',
       },
       placeholder: {
         title: 'Placeholder',
@@ -153,7 +151,7 @@ export function MetadataSectionSchema({ formData = {} }: SchemaArgs = {}) {
       showInView: {
         title: 'Show in view',
         description: 'Off, the fields are only edited here and never shown on the page.',
-        widget: 'metadata_boolean',
+        type: 'boolean',
         // NOT a storage guarantee — both renderers read an absent value as
         // `true` themselves, so a block authored before the setting existed
         // still renders.
