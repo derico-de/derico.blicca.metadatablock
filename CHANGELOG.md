@@ -3,7 +3,9 @@
 ## 1.0.0a5 (unreleased)
 
 
-- Nothing changed yet.
+- The Aurora npm package is `@derico/plone-metadata-block` now (was
+  `@derico/aurora-metadata-block`): Aurora calls these Plone blocks, not
+  Aurora blocks.
 
 
 ## 1.0.0a4 (2026-10-12)

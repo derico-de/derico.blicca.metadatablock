@@ -1,4 +1,4 @@
-# `@derico/aurora-metadata-block`
+# `@derico/plone-metadata-block`
 
 The Metadata blocks' Aurora half. This is a real npm package (block add-on
 contract §1.1: the editor half belongs to the Aurora ecosystem; Blicca

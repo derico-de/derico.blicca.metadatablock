@@ -1,5 +1,5 @@
 {
-  "name": "@derico/aurora-metadata-block",
+  "name": "@derico/plone-metadata-block",
   "version": "1.0.0-alpha.1",
   "description": "Aurora metadata blocks: show the content item's own metadata fields (title, description, dates, tags, ...) singly or as a section \u2014 inspired by @eeacms/volto-metadata-block",
   "type": "module",

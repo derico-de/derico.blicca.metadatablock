@@ -16,7 +16,7 @@ Typical uses:
 
 The blocks need [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
 which brings the Aurora editor to Blicca. Their editor half is also a plain
-Aurora block package, `@derico/aurora-metadata-block`, that can be used in an
+Aurora block package, `@derico/plone-metadata-block`, that can be used in an
 Aurora frontend directly, see
 [Using the blocks in Aurora](#using-the-blocks-in-aurora).
 
@@ -265,7 +265,7 @@ changing a default, is a breaking change.
 ## Using the blocks in Aurora
 
 The editor half lives in `bundle-src/` as the npm package
-`@derico/aurora-metadata-block` (not yet published). It registers both
+`@derico/plone-metadata-block` (not yet published). It registers both
 blocks and their sidebar widgets through the usual `install(config)` entry
 point and uses only upstream Aurora widgets.
 
