@@ -1,4 +1,4 @@
-"""The Metadata block's public renderer (``@@aurora-block-metadata``).
+"""The Metadata block's public renderer (``@@aurora-block-derico.metadata``).
 
 Registered under the block add-on contract's view-name convention (§5.1):
 ``BlockDispatchMixin.render_block_data`` resolves

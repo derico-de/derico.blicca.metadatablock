@@ -22,8 +22,8 @@ Aurora frontend directly, see
 
 The blocks are inspired by
 [`@eeacms/volto-metadata-block`](https://github.com/eea/volto-metadata-block)
-by the European Environment Agency and use the same block ids, `metadata`
-and `metadataSection`.
+by the European Environment Agency. Their `@type`s are `derico.metadata`
+and `derico.metadataSection`.
 
 ## Features
 
@@ -195,7 +195,7 @@ for the site root, so a block stored on the site root shows the site root's
 fields on every page.
 
 Two renderers emit the same markup: Chameleon templates registered as the
-`@@aurora-block-metadata` and `@@aurora-block-metadataSection` views for the
+`@@aurora-block-derico.metadata` and `@@aurora-block-derico.metadataSection` views for the
 public page, and React `view` components for the editor canvas and for
 Aurora frontends. Both read the shared fixture `tests/anatomy-cases.json` in
 their test suites, so they cannot drift apart unnoticed.

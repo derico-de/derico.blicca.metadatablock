@@ -1,4 +1,4 @@
-"""The Metadata Section block's public renderer (``@@aurora-block-metadataSection``).
+"""The Metadata Section block's public renderer (``@@aurora-block-derico.metadataSection``).
 
 The section's counterpart to ``metadata_block_view``: same dispatch
 convention, same parity rule against ``MetadataSectionView.tsx``, same

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<registry>
+  <records
+      interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
+      prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadata"
+      >
+    <value key="types">
+      <element>derico.metadata</element>
+    </value>
+  </records>
+  <records
+      interface="plone.blicca.auroraeditor.interfaces.IAuroraBlockAddon"
+      prefix="plone.blicca.auroraeditor.blockaddons/derico.blicca.metadatablock.metadataSection"
+      >
+    <value key="types">
+      <element>derico.metadataSection</element>
+    </value>
+  </records>
+</registry>

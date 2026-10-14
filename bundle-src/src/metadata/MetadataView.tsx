@@ -5,7 +5,7 @@
  * element, because ONE scope-wrapped stylesheet dresses both surfaces.
  *
  * - **The root is our own `<div class="metadata-block">`**, never the host's
- *   `.block-metadata` wrapper stamp. It is emitted ALWAYS, with the stored
+ *   `.block-derico-metadata` wrapper stamp. It is emitted ALWAYS, with the stored
  *   field and its kind when the catalog knows it — except with `showInView`
  *   off, where the PUBLIC surface emits nothing at all and the canvas draws
  *   the block as usual, so the field can still be edited there.
