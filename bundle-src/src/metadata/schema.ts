@@ -31,8 +31,8 @@ import { getStyleFieldDefinitionsFromRegistry } from '@plone/helpers';
 
 import { DEFAULT_LAYOUT, LAYOUTS } from './data';
 
-export const METADATA_BLOCK_TYPE = 'metadata';
-export const METADATA_SECTION_BLOCK_TYPE = 'metadataSection';
+export const METADATA_BLOCK_TYPE = 'derico.metadata';
+export const METADATA_SECTION_BLOCK_TYPE = 'derico.metadataSection';
 
 const BACKGROUND_FIELD_NAME = 'backgroundColor';
 

@@ -7,6 +7,13 @@
   `@derico/aurora-metadata-block`): Aurora calls these Plone blocks, not
   Aurora blocks.
 
+- The blocks' `@type`s are `derico.metadata` and `derico.metadataSection`
+  now (were `metadata` and `metadataSection`), namespaced after the npm
+  package (ADR 0025 in plone.blicca.auroraeditor). Upgrade step 1004
+  renames every stored block and the records' `types`. Content imported
+  later from `@eeacms/volto-metadata-block` keeps the old ids and is not
+  rendered.
+
 
 ## 1.0.0a4 (2026-10-12)
 

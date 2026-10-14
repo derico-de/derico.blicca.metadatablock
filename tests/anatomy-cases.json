@@ -11,7 +11,7 @@
     "than to whichever renderer landed first.",
     "",
     "`html` is the markup INSIDE the host's block wrapper, on the PUBLIC surface.",
-    "The wrapper's own `block block-metadata has--block-width--<w>` stamp is the",
+    "The wrapper's own `block block-derico-metadata has--block-width--<w>` stamp is the",
     "host's and is not our output.",
     "",
     "No whitespace between elements: the Plate editable computes",

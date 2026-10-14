@@ -112,15 +112,15 @@ describe.each([
 describe('the blocks join Aurora rather than displacing it', () => {
   it('leaves upstream’s blocks intact and adds exactly two', () => {
     for (const id of UPSTREAM_BLOCKS) expect((aurora as any).blocks.blocksConfig[id]).toBeDefined();
-    expect((aurora as any).blocks.blocksConfig.metadata).toBe(MetadataBlockInfo);
-    expect((aurora as any).blocks.blocksConfig.metadataSection).toBe(MetadataSectionBlockInfo);
+    expect((aurora as any).blocks.blocksConfig['derico.metadata']).toBe(MetadataBlockInfo);
+    expect((aurora as any).blocks.blocksConfig['derico.metadataSection']).toBe(MetadataSectionBlockInfo);
     const ids = Object.keys((aurora as any).blocks.blocksConfig);
-    expect(ids.filter((id) => !UPSTREAM_BLOCKS.includes(id)).sort()).toEqual(['metadata', 'metadataSection']);
+    expect(ids.filter((id) => !UPSTREAM_BLOCKS.includes(id)).sort()).toEqual(['derico.metadata', 'derico.metadataSection']);
   });
 
   it('installs idempotently — two records call install twice', () => {
     expect(install(aurora)).toBe(aurora);
-    expect((aurora as any).blocks.blocksConfig.metadata).toBe(MetadataBlockInfo);
+    expect((aurora as any).blocks.blocksConfig['derico.metadata']).toBe(MetadataBlockInfo);
   });
 });
 
@@ -206,8 +206,8 @@ describe('bundle hygiene', () => {
       getWidget: () => undefined,
     };
     expect(built.default(probe)).toBe(probe);
-    expect(probe.blocks.blocksConfig.metadata?.id).toBe('metadata');
-    expect(probe.blocks.blocksConfig.metadataSection?.id).toBe('metadataSection');
+    expect(probe.blocks.blocksConfig['derico.metadata']?.id).toBe('derico.metadata');
+    expect(probe.blocks.blocksConfig['derico.metadataSection']?.id).toBe('derico.metadataSection');
     for (const key of Object.keys(METADATA_WIDGETS)) expect(typeof probe.widgets.widget[key]).toBe('function');
   });
 });

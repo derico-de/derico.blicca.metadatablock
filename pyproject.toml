@@ -71,7 +71,7 @@ author_email = "md@derico.de"
 content_types = []
 behaviors = []
 services = ["@metadata-catalog"]
-views = ["aurora-block-metadata", "aurora-block-metadataSection"]
+views = ["aurora-block-derico.metadata", "aurora-block-derico.metadataSection"]
 
 [tool.uv]
 # Resolve against the Plone the site actually runs, so the lock CI installs is

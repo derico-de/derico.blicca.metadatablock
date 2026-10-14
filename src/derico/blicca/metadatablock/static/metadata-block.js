@@ -705,8 +705,8 @@ function MetadataSectionEdit(props) {
   const { preview } = usePreviewCatalog(props.data ?? {});
   return /* @__PURE__ */ jsx(MetadataSectionView, { data: preview, isEditMode: true, renderInput });
 }
-const METADATA_BLOCK_TYPE = "metadata";
-const METADATA_SECTION_BLOCK_TYPE = "metadataSection";
+const METADATA_BLOCK_TYPE = "derico.metadata";
+const METADATA_SECTION_BLOCK_TYPE = "derico.metadataSection";
 const BACKGROUND_FIELD_NAME = "backgroundColor";
 function backgroundField(data, blockType) {
   const definitions = getStyleFieldDefinitionsFromRegistry(BACKGROUND_FIELD_NAME, {

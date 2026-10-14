@@ -9,4 +9,6 @@
 
   <include file="1003.zcml" />
 
+  <include file="1004.zcml" />
+
 </configure>

@@ -18,8 +18,8 @@ describe('install()', () => {
 
   it('registers both blocks under their Volto ids', () => {
     install(upstream);
-    expect(upstream.blocks.blocksConfig.metadata).toBe(MetadataBlockInfo);
-    expect(upstream.blocks.blocksConfig.metadataSection).toBe(MetadataSectionBlockInfo);
+    expect(upstream.blocks.blocksConfig['derico.metadata']).toBe(MetadataBlockInfo);
+    expect(upstream.blocks.blocksConfig['derico.metadataSection']).toBe(MetadataSectionBlockInfo);
   });
 
   it('registers the five namespaced widgets, and only those', () => {

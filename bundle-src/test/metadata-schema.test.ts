@@ -23,7 +23,7 @@ describe('the Metadata block', () => {
   const schema = MetadataSchema({ formData: {} });
 
   it('is the block type the entry registers', () => {
-    expect(METADATA_BLOCK_TYPE).toBe('metadata');
+    expect(METADATA_BLOCK_TYPE).toBe('derico.metadata');
   });
 
   it('offers the notices, the field, the two flags, the placeholder and the width', () => {
@@ -83,7 +83,7 @@ describe('the Metadata Section block', () => {
   const schema = MetadataSectionSchema({ formData: {} });
 
   it('is the block type the entry registers', () => {
-    expect(METADATA_SECTION_BLOCK_TYPE).toBe('metadataSection');
+    expect(METADATA_SECTION_BLOCK_TYPE).toBe('derico.metadataSection');
   });
 
   it('offers the notices, the heading, the flag, the layout, the fields and the width', () => {

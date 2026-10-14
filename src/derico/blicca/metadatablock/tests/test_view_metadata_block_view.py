@@ -67,7 +67,7 @@ class MetadataViewTestCase:
 
 class TestRegistration(MetadataViewTestCase):
     def test_view_name_is_the_dispatch_convention(self):
-        assert VIEW_NAME == "aurora-block-metadata"
+        assert VIEW_NAME == "aurora-block-derico.metadata"
         view = getMultiAdapter((self.context, self._request()), name=VIEW_NAME)
         assert view.__name__ == VIEW_NAME
 

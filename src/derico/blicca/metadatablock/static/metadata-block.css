@@ -18,7 +18,7 @@
  *    contract and `test/seam-lockstep.test.ts` holds this file to it.
  * 3. DESCENT, NOT NAMES. Every rule descends from `.metadata-block` or
  *    `.metadata-section-block`, the blocks' own roots — never the host's
- *    `.block-metadata` wrapper stamp. One exception, marked where it
+ *    `.block-derico-metadata` wrapper stamp. One exception, marked where it
  *    appears: the editor's `.metadata-notice` sidebar chrome.
  * 4. NEVER SELECT ON `[href]`. The canvas drops every `href` and keeps every
  *    element, tag and class.

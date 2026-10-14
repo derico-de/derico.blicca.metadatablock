@@ -7,9 +7,10 @@ contract §3.1) whose editor half is the Aurora npm package
 intent — derico.de is its first consumer, not its subject.
 
 Heavily inspired by `@eeacms/volto-metadata-block` (European Environment
-Agency, MIT). Thank you. The block ids are theirs (`metadata`,
-`metadataSection`) so a page authored with that add-on names the same blocks;
-the data shape and the editing model are this package's own, see ADR 0001.
+Agency, MIT). Thank you. The block ids were theirs (`metadata`,
+`metadataSection`) until profile version 1004 namespaced them after the npm
+package (ADR 0025 in plone.blicca.auroraeditor). The data shape and the
+editing model are this package's own, see ADR 0001.
 
 ## Language
 
@@ -18,7 +19,7 @@ A block that shows ONE [[field]] of the page it sits on, with an optional
 label and an optional placeholder — and, in the canvas, the place that
 field is edited ([[input]]). It stores the field id, the label flag, the
 [[show in view]] flag and the placeholder and nothing else; what the field
-holds is the page's, derived on the page. Stored `@type: metadata`.
+holds is the page's, derived on the page. Stored `@type: derico.metadata`.
 _Avoid_: field block (a field is what it shows, not what it is), title block
 (Aurora's title block is a different, editable, thing), property block.
 
@@ -40,7 +41,7 @@ what it does when on).
 A block that shows SEVERAL fields of the page, in stored order, each with
 its own label flag, under an optional heading, in one of two [[layout]]s —
 and, like the single block, only when [[show in view]] is on. Stored
-`@type: metadataSection`.
+`@type: derico.metadataSection`.
 _Avoid_: metadata table (one layout of it), fact box (a use of it).
 
 **Field**:

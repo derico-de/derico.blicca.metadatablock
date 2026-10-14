@@ -33,7 +33,7 @@
 
     <!-- Diagnostics and insert-gating, never dispatch. -->
     <value key="types">
-      <element>metadata</element>
+      <element>derico.metadata</element>
     </value>
 
     <!-- No `permission`: the blocks are generic and for every editor. -->
@@ -49,7 +49,7 @@
     <value key="bundle">++plone++derico.blicca.metadatablock/metadata-block.js</value>
     <value key="css">++plone++derico.blicca.metadatablock/metadata-block.css</value>
     <value key="types">
-      <element>metadataSection</element>
+      <element>derico.metadataSection</element>
     </value>
     <value key="enabled">True</value>
     <value key="weight">100</value>

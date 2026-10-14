@@ -59,7 +59,7 @@ class SectionViewTestCase:
 
 class TestRegistration(SectionViewTestCase):
     def test_view_name_is_the_dispatch_convention(self):
-        assert VIEW_NAME == "aurora-block-metadataSection"
+        assert VIEW_NAME == "aurora-block-derico.metadataSection"
         view = getMultiAdapter((self.context, self._request()), name=VIEW_NAME)
         assert view.__name__ == VIEW_NAME
 
