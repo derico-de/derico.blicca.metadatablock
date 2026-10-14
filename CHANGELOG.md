@@ -4,7 +4,7 @@
 
 
 - The npm package is `@derico/aurora-metadata-block` again (was
-  `@derico/plone-metadata-block` in 1.0.0a5): its name says which frontend
+  `@derico/plone-metadata-block` in 1.0.0a5). Its name says which frontend
   it is for, as `volto-<name>-block` does. The descriptions call the blocks
   Plone blocks, not Aurora blocks. Their `@type`s stay `derico.metadata`
   and `derico.metadataSection`.

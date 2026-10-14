@@ -16,8 +16,8 @@ Typical uses:
 
 The blocks need [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
 which brings the Aurora editor to Blicca. Their editor half is also a plain
-Plone block package for Aurora, `@derico/aurora-metadata-block`, that can be
-used in an Aurora frontend directly, see
+Plone block package for Aurora, `@derico/aurora-metadata-block`, that an
+Aurora frontend can use directly, see
 [Using the blocks in Aurora](#using-the-blocks-in-aurora).
 
 The blocks are inspired by
