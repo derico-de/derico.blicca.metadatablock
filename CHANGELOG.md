@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0a5 (unreleased)
+## 1.0.0a5 (2026-10-14)
 
 
 - The Aurora npm package is `@derico/plone-metadata-block` now (was
