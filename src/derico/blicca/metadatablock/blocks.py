@@ -1,7 +1,7 @@
 """The two blocks' identities, spelled once.
 
 ``derico.metadata`` and ``derico.metadataSection`` are the blocks' ``@type``
-values, namespaced after the npm package ``@derico/plone-metadata-block``
+values, namespaced after the npm package ``@derico/aurora-metadata-block``
 (ADR 0025 in plone.blicca.auroraeditor). Every surface that names a block
 derives its spelling from these constants: the serialization transformers
 (``metadata_transform``), the renderer view names

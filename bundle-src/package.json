@@ -1,7 +1,7 @@
 {
-  "name": "@derico/plone-metadata-block",
+  "name": "@derico/aurora-metadata-block",
   "version": "1.0.0-alpha.1",
-  "description": "Aurora metadata blocks: show the content item's own metadata fields (title, description, dates, tags, ...) singly or as a section \u2014 inspired by @eeacms/volto-metadata-block",
+  "description": "Plone metadata blocks for Aurora: show the content item's own metadata fields (title, description, dates, tags, ...) singly or as a section \u2014 inspired by @eeacms/volto-metadata-block",
   "type": "module",
   "license": "MIT",
   "keywords": [

@@ -1,7 +1,7 @@
 [project]
 name = "derico.blicca.metadatablock"
 version = "1.0.0a6.dev0"
-description = "Aurora Metadata blocks: show the content item's own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
+description = "Plone Metadata blocks for the Aurora editor: show the content item's own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "GPL-2.0-or-later"}
@@ -60,7 +60,7 @@ packages = ["src/derico"]
 [tool.plone.backend_addon.settings]
 package_name = "derico.blicca.metadatablock"
 package_title = "Derico Blicca Metadatablock"
-package_description = "Aurora Metadata blocks: show the content item's own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
+package_description = "Plone Metadata blocks for the Aurora editor: show the content item's own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
 package_folder = "derico/blicca/metadatablock"
 plone_version = "6.0"
 is_headless = false

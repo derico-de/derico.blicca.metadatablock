@@ -6,7 +6,7 @@ author_email: md@derico.de
 author_name: Maik Derstappen
 github_organization: derico.blicca
 is_headless: false
-package_description: 'Aurora Metadata blocks: show the content item''s own metadata
+package_description: 'Plone Metadata blocks for the Aurora editor: show the content item''s own metadata
     fields (title, description, dates, tags, ...) as blocks, singly or as a section'
 package_name: derico.blicca.metadatablock
 package_title: Derico Blicca Metadatablock

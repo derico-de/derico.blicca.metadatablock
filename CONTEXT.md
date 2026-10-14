@@ -3,7 +3,7 @@
 Two Metadata blocks: a page's own fields, shown inside its blocks area —
 one field, or a section of several. A Blicca block add-on (block add-on
 contract §3.1) whose editor half is the Aurora npm package
-`@derico/plone-metadata-block` (publishing it is a later step). Generic by
+`@derico/aurora-metadata-block` (publishing it is a later step). Generic by
 intent — derico.de is its first consumer, not its subject.
 
 Heavily inspired by `@eeacms/volto-metadata-block` (European Environment

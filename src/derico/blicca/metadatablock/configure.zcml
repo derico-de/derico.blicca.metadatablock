@@ -12,7 +12,7 @@
   <genericsetup:registerProfile
       name="default"
       title="Derico Blicca Metadatablock"
-      description="Aurora Metadata blocks: show the content item&#39;s own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
+      description="Plone Metadata blocks for the Aurora editor: show the content item&#39;s own metadata fields (title, description, dates, tags, ...) as blocks, singly or as a section"
       provides="Products.GenericSetup.interfaces.EXTENSION"
       directory="profiles/default"
       />

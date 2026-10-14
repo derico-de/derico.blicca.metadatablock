@@ -16,8 +16,8 @@ Typical uses:
 
 The blocks need [plone.blicca.auroraeditor](https://github.com/derico-de/plone.blicca.auroraeditor),
 which brings the Aurora editor to Blicca. Their editor half is also a plain
-Aurora block package, `@derico/plone-metadata-block`, that can be used in an
-Aurora frontend directly, see
+Plone block package for Aurora, `@derico/aurora-metadata-block`, that can be
+used in an Aurora frontend directly, see
 [Using the blocks in Aurora](#using-the-blocks-in-aurora).
 
 The blocks are inspired by
@@ -161,7 +161,7 @@ The **Metadata section** block:
   `has--kind--<kind>`. With **Show in view** off, nothing is emitted at all.
 - Everything inside is left out when it has nothing to show.
 - Block width and background classes are added by the editor on a wrapper
-  around this markup, as for every Aurora block.
+  around this markup, as for every Plone block.
 
 ## How it works
 
@@ -265,7 +265,7 @@ changing a default, is a breaking change.
 ## Using the blocks in Aurora
 
 The editor half lives in `bundle-src/` as the npm package
-`@derico/plone-metadata-block` (not yet published). It registers both
+`@derico/aurora-metadata-block` (not yet published). It registers both
 blocks and their sidebar widgets through the usual `install(config)` entry
 point and uses only upstream Aurora widgets.
 
