@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.0a8 (unreleased)
+
+
+- Nothing changed yet.
+
+
 ## 1.0.0a7 (2026-10-16)
 
 
