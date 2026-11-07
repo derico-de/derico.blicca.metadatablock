@@ -3,7 +3,8 @@
 ## 1.0.0a8 (unreleased)
 
 
-- Nothing changed yet.
+- Keep compiled CSS and JavaScript out of Git diffs; the generated files
+  remain tracked and ship with the package.
 
 
 ## 1.0.0a7 (2026-10-16)
