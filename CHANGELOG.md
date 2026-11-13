@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.0a8 (unreleased)
+## 1.0.0a8 (2026-11-13)
 
 
 - Keep compiled CSS and JavaScript out of Git diffs; the generated files
